@@ -1,0 +1,15 @@
+{
+  "name": "mindwurld",
+  "version": "0.0.1",
+  "description": "Port of Wurld to Node",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ed Jones",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0"
+  }
+}
