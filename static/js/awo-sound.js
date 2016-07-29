@@ -14,7 +14,7 @@ var WurldSound = function(){
     this.footstepsSfx = new Howl({
         urls:[this.path+'footsteps.wav'],
         loop:true,
-        volume:0.1
+        volume:0.4
     }); 
     this.footsteps_is_playing = false;
 };           

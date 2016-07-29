@@ -60,7 +60,8 @@ canvas { width: 100%; height: 100%; }
   z-index:50;
   top:0;
   left:0;
-  background:url(../img/scanline_mask.png);
+  background-image: url(../img/scanline_mask.png);
+  background-color: darkGray;
 }
 
 .row, .col{

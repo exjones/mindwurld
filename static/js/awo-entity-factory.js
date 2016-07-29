@@ -102,7 +102,7 @@ WurldEntityFactory.prototype.box = function(parent,def){
     var z = this.getHeight(parent,def) + (def.size / 2);
     
     obj.geometry = new THREE.BoxGeometry( def.size, def.size, def.size );
-    obj.material = new THREE.MeshLambertMaterial({
+    obj.material = new THREE.MeshPhongMaterial({
         color: WurldColors.lookup(def.colorName),
         shading: THREE.FlatShading
     });
@@ -131,8 +131,8 @@ WurldEntityFactory.prototype.oakTree = function(parent,def){
     var z = this.getHeight(parent,def);
     if(z < 0) return obj; // No trees under water!
 
-    var trunkMaterial = new THREE.MeshLambertMaterial({color: WurldColors.Brown,shading: THREE.FlatShading});
-    var leafMaterial = new THREE.MeshLambertMaterial({color:WurldColors.ForestGreen,shading:THREE.FlatShading});
+    var trunkMaterial = new THREE.MeshPhongMaterial({color: WurldColors.Brown,shading: THREE.FlatShading});
+    var leafMaterial = new THREE.MeshPhongMaterial({color:WurldColors.ForestGreen,shading:THREE.FlatShading});
     
     // Main mesh of the tree is the trunk, everything else is relative (and attached to) that
     var trunkGeometry = new THREE.TubeGeometry(
@@ -220,8 +220,8 @@ WurldEntityFactory.prototype.firTree = function(parent,def){
     var z = this.getHeight(parent,def);
     if(z < 0) return obj; // No trees under water!
 
-    var trunkMaterial = new THREE.MeshLambertMaterial({color: WurldColors.Sienna,shading: THREE.FlatShading});
-    var leafMaterial = new THREE.MeshLambertMaterial({color:WurldColors.SeaGreen,shading:THREE.FlatShading});
+    var trunkMaterial = new THREE.MeshPhongMaterial({color: WurldColors.Sienna,shading: THREE.FlatShading});
+    var leafMaterial = new THREE.MeshPhongMaterial({color:WurldColors.SeaGreen,shading:THREE.FlatShading});
     
     // Main mesh of the tree is the trunk, everything else is relative (and attached to) that
     var trunkGeometry = new THREE.TubeGeometry(
@@ -276,14 +276,16 @@ WurldEntityFactory.prototype.rock = function(parent,def){
 
     var z = this.getHeight(parent,def);
 
-    var material = new THREE.MeshLambertMaterial({
+    var material = new THREE.MeshPhongMaterial({
         color: WurldColors.lookup(
             (color==0)?'DarkGray':
             (color==1)?'DimGray':
             (color==2)?'LightSlateGray':
             (color==3)?'SlateGray':'Gray'
         ),
-        shading: THREE.FlatShading
+        shading: THREE.FlatShading,
+        specular: WurldColors.White,
+        shininess:100
     });
 
     var geometry = 
@@ -326,15 +328,15 @@ WurldEntityFactory.prototype.palmTree = function(parent,def){
     var z = this.getHeight(parent,def);
     if(z < 0) return obj; // No trees under water!
 
-    var trunkMaterial = new THREE.MeshLambertMaterial({
+    var trunkMaterial = new THREE.MeshPhongMaterial({
         color: WurldColors.Peru,
-        shading: THREE.FlatShading,
-        side:THREE.DoubleSide
+        shading: THREE.FlatShading
+        //,side:THREE.DoubleSide
     });
-    var leafMaterial = new THREE.MeshLambertMaterial({
+    var leafMaterial = new THREE.MeshPhongMaterial({
         color:WurldColors.MediumSeaGreen,
-        shading:THREE.FlatShading,
-        side:THREE.DoubleSide
+        shading:THREE.FlatShading
+        //,side:THREE.DoubleSide
     });
     
     var curve = new THREE.QuadraticBezierCurve3(
@@ -375,7 +377,7 @@ WurldEntityFactory.prototype.palmTree = function(parent,def){
     top_mesh.position.set(bend,0,length);
     top_mesh.quaternion.setFromUnitVectors(up_normal,top_normal);
     
-    //top_mesh.castShadow = true;
+    top_mesh.castShadow = true;
     obj.mesh.add(top_mesh);
     
     // Create the leaves
@@ -389,10 +391,11 @@ WurldEntityFactory.prototype.palmTree = function(parent,def){
     leaf_shape.lineTo( 0, -leaf_width );
     leaf_shape.lineTo( 0, 0 );
 
-    var leaf_geom = new THREE.ShapeGeometry( leaf_shape );
+    var leaf_geom = new THREE.ExtrudeGeometry( leaf_shape,{amount:0.02,bevelEnabled:false} );
     leaf_geom.applyMatrix((new THREE.Matrix4()).makeRotationY(20 * (Math.PI / 180)))
     for(var l = 0;l < leaves;l++){
         var leaf_mesh = new THREE.Mesh( leaf_geom, leafMaterial ) ;	
+
         leaf_mesh.rotation.z = ((2 * Math.PI) / leaves) * l;
         leaf_mesh.castShadow = true;
         top_mesh.add(leaf_mesh);
