@@ -5,17 +5,24 @@ var WurldInput = function(){
 
 	this.listener = new window.keypress.Listener();
 
+	this.last_walk_axis = 0;
+	this.last_turn_axis = 0;
+
 	this.start_walking = function(speed){
-		WURLD.physics.setSpeed(speed);
-        WURLD.sound.startFootsteps();
-        WURLD.is_walking = true;
+		if(!WURLD.is_walking){
+			WURLD.physics.setSpeed(speed);
+			WURLD.sound.startFootsteps();
+    	WURLD.is_walking = true;
+		}
 	}
 
 	this.stop_walking = function(){
-		WURLD.physics.setSpeed(0);
-        WURLD.sound.stopFootsteps();
-        WURLD.animator.resetPerson(WURLD.player_avatar);
-        WURLD.is_walking = false;
+		if(WURLD.is_walking){
+			WURLD.physics.setSpeed(0);
+			WURLD.sound.stopFootsteps();
+    	WURLD.animator.resetPerson(WURLD.player_avatar);
+    	WURLD.is_walking = false;
+		}
 	}
 
 	this.start_turning = function(speed){
@@ -63,9 +70,74 @@ WurldInput.prototype.start = function(){
         "this":this,
         on_keydown: function(){this.start_turning(WURLD.input.TURN_SPEED);},
         on_keyup: function(){this.stop_turning();}
-    });    
+    });
+
+    this.listener.register_combo({
+        keys: 'm',
+        on_keyup: function(){WURLD.sound.toggleMusic();}
+    });
 }
 
 WurldInput.prototype.poll = function(dt){
+
 	// Check for gamepad input
+	var gamepads = navigator.getGamepads();
+	if(gamepads && gamepads.length){
+		var pad = gamepads[0];
+		if(pad){
+			var sens = WURLD_SETTINGS.gamepad.axis_sensitivity;
+
+			var turn_axis = pad.axes[WURLD_SETTINGS.gamepad.turn_axis];
+			if(turn_axis > sens && this.last_turn_axis < sens){
+				this.start_turning(this.TURN_SPEED);
+			}
+			else if(turn_axis < -sens && this.last_turn_axis > -sens){
+				this.start_turning(-this.TURN_SPEED);
+			}
+			else if(
+				(turn_axis <= sens && this.last_turn_axis >= sens) ||
+				(turn_axis >= -sens && this.last_turn_axis <= -sens)
+			){
+				this.stop_turning();
+			}
+			this.last_turn_axis = turn_axis;
+
+			var walk_axis = pad.axes[WURLD_SETTINGS.gamepad.walk_axis];
+			if(walk_axis > sens && this.last_walk_axis < sens){
+				this.start_walking(-this.WALK_SPEED);
+			}
+			else if(walk_axis < -sens && this.last_walk_axis > -sens) {
+				this.start_walking(this.WALK_SPEED);
+			}
+			else if(
+				(walk_axis <= sens && this.last_walk_axis >= sens) ||
+				(walk_axis >= -sens && this.last_walk_axis <= -sens)
+			){
+				this.stop_walking();
+			}
+			this.last_walk_axis = walk_axis;
+		}
+	}
+}
+WurldInput.prototype.start_on_gamepad = function(){
+
+		var gamepads = navigator.getGamepads();
+
+		if(gamepads && gamepads.length){
+			var pad = gamepads[0];
+			if(pad){
+				for(var b = 0;b < pad.buttons.length;b++){
+					if(typeof(pad.buttons[b]) == 'object'){
+						if(pad.buttons[b].pressed) WURLD.do_start();
+						else{
+							if(pad.buttons[b] > 0.5) WURLD.do_start();
+						}
+					}
+				}
+			}
+		}
+
+		if(!WURLD.is_started){
+			requestAnimationFrame(WURLD.input.start_on_gamepad);
+		}
 }

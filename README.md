@@ -13,6 +13,7 @@ Credits
 * [Howler.js](https://github.com/goldfire/howler.js/) Howler.js a JavaScript audio library for modern web applications.
 * [Keypress](http://dmauro.github.io/Keypress/) A robust JavaScript library for capturing keyboard input. Surprisingly important.
 * [Seedrandom](https://github.com/davidbau/seedrandom) A predictable, portable, seedable random number generator, for JavaScript.
+* [Matter.js](http://brm.io/matter-js/index.html) and [Poly-Decomp](https://github.com/schteppe/poly-decomp.js) For providing physics based movement and simple collision detection.
 * [Clara.io](https://clara.io/) Browser based 3D modeling, for free. 
 * [BDCraft](http://bdcraft.net/) Beautiful high-resolution textures, for some game I've never heard of. Craftmine or somesuch.
 * [Longzijun](https://longzijun.wordpress.com/) Incredibly talented musician, poet, writer, and photographer.

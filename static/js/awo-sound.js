@@ -31,6 +31,10 @@ WurldSound.prototype.setMusic = function(mode){
     if(mode.toUpperCase() == 'ON') this.startMusic();
     else this.stopMusic();
 };
+WurldSound.prototype.toggleMusic = function(){
+    if($('#w-music-btn').attr('src').indexOf('_on') > 0) this.stopMusic();
+    else this.startMusic();
+};
 
 WurldSound.prototype.start = function(){this.startSfx.play();};
 WurldSound.prototype.ok = function(){this.okSfx.play();};
