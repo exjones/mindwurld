@@ -233,7 +233,14 @@ var WURLD = {
             WURLD.load_necessary_chunks();
 
             // Make sure the player is on the ground
+            var prev_z = WURLD.player_avatar.position.z;
             WURLD.put_player_on_ground();
+
+            // Make a splash if they enter/leave the water
+            var curr_z = WURLD.player_avatar.position.z;
+            if((prev_z > 0 && curr_z <= 0)||(prev_z <= 0 && curr_z > 0)){
+                WURLD.sound.splash();
+            }
 
             if(WURLD.is_walking){
                 WURLD.animator.updatePerson(WURLD.player_avatar,delta);
@@ -660,21 +667,18 @@ var WURLD = {
 					      user_name:WurldSettings.user_name()
 	            });
 
-	            // Put the player back where they were last
+	            // Put the player at their starting position
 	            WURLD.player_avatar.position.copy(WurldSettings.start_location());
 	            WURLD.player_avatar.rotation.y = WurldSettings.start_rotation();
 
-	            // Warp the camera to the player's position
+	            // Warp the camera to near the player's position
 	            WURLD.camera.position.copy(WURLD.calc_camera_pos());
-                WURLD.look_at.copy(WURLD.calc_camera_look());
-                WURLD.camera.lookAt(WURLD.look_at);
+              WURLD.look_at.copy(WURLD.calc_camera_look());
+              WURLD.camera.lookAt(WURLD.look_at);
 
-                // Load the wurld chunks according to where the player is
-                // WURLD.load_necessary_chunks();
+              WURLD.scene.add( WURLD.player_avatar );
 
-                WURLD.scene.add( WURLD.player_avatar );
-
-                deferred.resolve('Loaded player');
+              deferred.resolve('Loaded player');
             }
         );
 
