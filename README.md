@@ -17,8 +17,8 @@ To get started;
 * Hit a key, click the mouse, or press a button on your gamepad
 * Walk with W and S, or gamepad Left Stick
 * Turn with A and D, or gamepad Right Stick
-* Turn music on/off by clicking the icon, hitting the M key, or gamepad Triangle (Y on XBox)
-* Switch skins with Left / Right cursor keys, or gamepad d-pad Left / right
+* Turn music on/off by clicking the icon, hitting the M key, or gamepad Triangle (Y on XBone)
+* Switch skins with Left / Right cursor keys, or controller d-pad Left / Right
 
 You can walk around and marvel at the glitchy physics. But don't go too far, only a small section of the map has been ported to static json files.
 
