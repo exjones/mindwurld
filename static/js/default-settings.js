@@ -3,7 +3,8 @@ WURLD_SETTINGS={
   "debug_lights" : false,
   "debug_physics" : false,
   "show_stats" : true,
-  "user_name" : "Foo Barson",
+  "user_name" : "barry",
+  "skin_name" : "barry",
   "antialias" : true,
   "dynamic_shadows":{
     "enabled":true,
@@ -16,10 +17,12 @@ WURLD_SETTINGS={
   },
   "start_rotation" : 3.14159,
   "music" : "off",
-  "skin_name" : "foo_barson_skin.png",
   "gamepad":{
     "walk_axis":1,
     "turn_axis":2,
-    "axis_sensitivity":0.25
+    "axis_sensitivity":0.25,
+    "play_button":3,
+    "prev_button":14,
+    "next_button":15
   }
 };

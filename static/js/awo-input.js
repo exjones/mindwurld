@@ -7,6 +7,9 @@ var WurldInput = function(){
 
 	this.last_walk_axis = 0;
 	this.last_turn_axis = 0;
+	this.play_button_down = false;
+	this.prev_button_down = false;
+	this.next_button_down = false;
 
 	this.start_walking = function(speed){
 		if(!WURLD.is_walking){
@@ -76,6 +79,16 @@ WurldInput.prototype.start = function(){
         keys: 'm',
         on_keyup: function(){WURLD.sound.toggleMusic();}
     });
+
+		this.listener.register_combo({
+        keys: 'left',
+        on_keyup: function(){WURLD.prev_skin();}
+    });
+
+		this.listener.register_combo({
+        keys: 'right',
+        on_keyup: function(){WURLD.next_skin();}
+    });
 }
 
 WurldInput.prototype.poll = function(dt){
@@ -116,6 +129,30 @@ WurldInput.prototype.poll = function(dt){
 				this.stop_walking();
 			}
 			this.last_walk_axis = walk_axis;
+
+			if(pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == false){
+				this.play_button_down = true;
+			}
+			else if(!pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == true){
+				this.play_button_down = false;
+				WURLD.sound.toggleMusic();
+			}
+
+			if(pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == false){
+				this.prev_button_down = true;
+			}
+			else if(!pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == true){
+				this.prev_button_down = false;
+				WURLD.prev_skin();
+			}
+
+			if(pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == false){
+				this.next_button_down = true;
+			}
+			else if(!pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == true){
+				this.next_button_down = false;
+				WURLD.next_skin();
+			}
 		}
 	}
 }

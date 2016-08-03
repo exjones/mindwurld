@@ -309,7 +309,7 @@ var WURLD = {
         var new_material = WURLD.models['person_model'].children[0].material.clone();
 
         if(obj.skin_name){
-            new_material.map = WURLD.texture_loader.load('img/'+obj.skin_name,function(){
+            new_material.map = WURLD.texture_loader.load('img/'+obj.skin_name+'_skin.png',function(){
                 new_material.needsUpdate = true;
             });
         }
@@ -350,6 +350,7 @@ var WURLD = {
                 var spritey = WURLD.make_text_sprite(name);
     	        spritey.position.set(0,9,0);
     	        person.add( spritey );
+              WURLD_SETTINGS.user_name = name;
             }
         }
     },
@@ -363,6 +364,7 @@ var WURLD = {
 
         var src = skin_name;
         if(src && src.indexOf('img/') < 0) src = 'img/'+src;
+        if(src && src.indexOf('_skin.png') < 0) src = src+'_skin.png';
 
         var img = (
             person &&
@@ -375,12 +377,43 @@ var WURLD = {
 
         if(curr_src && curr_src.indexOf(src) < 0){
             W_log('Updating skin to',src);
-            person.children[0].material.map = THREE.ImageUtils.loadTexture(src, THREE.UVMapping,function(){
+            var old_name = WURLD_SETTINGS.user_name;
+            var new_name = skin_name.replace(/_/,' ');
+            person.children[0].material.map = WURLD.texture_loader.load(src, function(){
 	            person.children[0].material.needsUpdate = true;
+              WURLD.set_gamer_tag(WURLD.player_avatar,old_name,new_name);
             });
         }
 
         return curr_src;
+    },
+
+    curr_skin_id: function(){
+
+      for(var i = 0;i < WURLD_SKINS.length;i++){
+        if(WURLD_SKINS[i] == WURLD_SETTINGS.skin_name) return i;
+      }
+      return -1;
+    },
+
+    next_skin: function(){
+      var curr = WURLD.curr_skin_id();
+      if(curr >= 0){
+        curr++;
+        if(curr >= WURLD_SKINS.length) curr = 0;
+        WURLD_SETTINGS.skin_name = WURLD_SKINS[curr];
+        WURLD.set_skin(WURLD.player_avatar,WURLD_SETTINGS.skin_name);
+      }
+    },
+
+    prev_skin: function(){
+      var curr = WURLD.curr_skin_id();
+      if(curr >= 0){
+        curr--;
+        if(curr < 0) curr = WURLD_SKINS.length - 1;
+        WURLD_SETTINGS.skin_name = WURLD_SKINS[curr];
+        WURLD.set_skin(WURLD.player_avatar,WURLD_SETTINGS.skin_name);
+      }
     },
 
     comet_post: function(obj,func){
@@ -560,7 +593,7 @@ var WURLD = {
 
     keep_camera_above_ground: function(){
 
-        var top = 4000;
+        var top = 1000;
         var start = (new THREE.Vector3()).copy(WURLD.camera.position);
         start.setZ(top);
 
@@ -624,7 +657,7 @@ var WURLD = {
 
 	            WURLD.player_avatar = WURLD.create_person({
 	            	skin_name:WurldSettings.skin_name(),
-					user_name:WurldSettings.user_name()
+					      user_name:WurldSettings.user_name()
 	            });
 
 	            // Put the player back where they were last
