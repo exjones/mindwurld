@@ -12,7 +12,7 @@ To get started;
 
 * Make sure you've got Node.js installed, plus as the Express and Body Parser modules.
 * Start up the server with "node app.js" from the command line.
-* Connect to "http://localhost:4004/"
+* Use a decent browser to connect to "http://localhost:4004/"
 * Wait for stuff to load
 * Hit a key, click the mouse, or press a button on your gamepad
 * Walk with W and S, or gamepad Left Stick
@@ -22,9 +22,9 @@ To get started;
 
 You can walk around and marvel at the glitchy physics. But don't go too far, only a small section of the map has been ported to static json files.
 
-Tested on a MacBook Pro Retina, with a PS4 Dualshock controller. A Digital Storm custom gaming PC, with XBox One controller, and an Alienware Alpha with XBox 360 controller.
+Tested with Firefox and Chrome, on a MacBook Pro Retina, running OS X El Capitan, with a Playstation Dualshock 4 (urban camouflage) controller. A Digital Storm custom gaming PC, running Windows 10, with XBox One controller. And an Alienware Alpha, running Windows 8.1, with XBox 360 controller.
 
-YMMV
+YMMV.
 
 Credits
 -------
