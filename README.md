@@ -11,7 +11,7 @@ Instructions
 To get started;
 
 * Make sure you've got Node.js installed, plus as the Express and Body Parser modules.
-* Start up the server with "node app.js" from the command line.
+* Start up the server with "node server.js" from the command line.
 * Use a decent browser to connect to "http://localhost:4004/"
 * Wait for stuff to load
 * Hit a key, click the mouse, or press a button on your gamepad

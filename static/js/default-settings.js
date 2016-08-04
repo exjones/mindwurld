@@ -10,12 +10,13 @@ WURLD_SETTINGS={
     "enabled":true,
     "map_size":4096
   },
+  "pretty_water":true,
   "start_location" : {
-    "x" : 0,
-    "y" : 0,
-    "z" : 125
+    "x" : -530.923, //0,
+    "y" : 251.285, //0,
+    "z" : -1.00//134.0169
   },
-  "start_rotation" : 3.14159,
+  "start_rotation" : 2.96,//3.14159,
   "music" : "off",
   "gamepad":{
     "walk_axis":1,

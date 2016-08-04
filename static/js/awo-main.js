@@ -3,6 +3,15 @@ W_log('Loading Mind Wurld Open main JavaScript routines...');
 
 var WURLD = {
 
+    water: {
+      parameters: {
+        size: 4000
+      },
+      normals: null,
+      obj: null,
+      mirror: null
+    },
+
     scene: null,
     camera: null,
     renderer: null,
@@ -53,7 +62,7 @@ var WURLD = {
         WURLD.animator = new WurldAnimate();
 
 		// We're going to use 2D physics in the ground-plane for collision detection and response
-		WURLD.physics = new WurldPhysics(WURLD_SETTINGS.start_location.x,WURLD_SETTINGS.start_location.y);
+    WURLD.physics = new WurldPhysics(WURLD_SETTINGS.start_location.x,WURLD_SETTINGS.start_location.y,WURLD_SETTINGS.start_rotation);
 
         // Set up the Three.js scene
         WURLD.scene = new THREE.Scene();
@@ -92,7 +101,7 @@ var WURLD = {
         WURLD.scene.add(WURLD.ambient);
 
         WURLD.sun = new THREE.DirectionalLight( WurldColors.White, 1.0 );
-        WURLD.sun.position.copy(WURLD.light_position);
+        // WURLD.sun.position.copy(WURLD.light_position);
         WURLD.sun.position.addVectors(WURLD_SETTINGS.start_location,WURLD.light_position);
         WURLD.sun.target.position.copy(WURLD_SETTINGS.start_location);
 
@@ -104,18 +113,45 @@ var WURLD = {
           WURLD.sun.castShadow = true;
           WURLD.sun.shadow.mapSize.width = WURLD_SETTINGS.dynamic_shadows.map_size;
           WURLD.sun.shadow.mapSize.height = WURLD_SETTINGS.dynamic_shadows.map_size;
-          WURLD.sun.shadow.camera.far = 150;
-          WURLD.sun.shadow.camera.near = 50;
-          WURLD.sun.shadow.camera.left = -100;
-          WURLD.sun.shadow.camera.right = 100;
-          WURLD.sun.shadow.camera.top = 100;
-          WURLD.sun.shadow.camera.bottom = -70;
+          WURLD.sun.shadow.camera.far = 200;
+          WURLD.sun.shadow.camera.near = 5;
+          WURLD.sun.shadow.camera.left = -200;
+          WURLD.sun.shadow.camera.right = 200;
+          WURLD.sun.shadow.camera.top = 200;
+          WURLD.sun.shadow.camera.bottom = -200;
         }
 
         WURLD.scene.add(WURLD.sun);
         if(WURLD_SETTINGS.debug_lights){
             WURLD.scene.add(new THREE.DirectionalLightHelper(WURLD.sun));
             WURLD.scene.add(new THREE.CameraHelper(WURLD.sun.shadow.camera));
+        }
+
+        // Reflective water
+        if(WURLD_SETTINGS.pretty_water){
+          WURLD.water.normals = new THREE.TextureLoader().load( 'img/waternormals.jpg' );
+				  WURLD.water.normals.wrapS = WURLD.water.normals.wrapT = THREE.RepeatWrapping;
+
+				  WURLD.water.obj = new THREE.Water( WURLD.renderer, WURLD.camera, WURLD.scene, {
+					  textureWidth: 1024,
+					  textureHeight: 1024,
+					  waterNormals: WURLD.water.normals,
+					  alpha: 	0.9,
+					  sunDirection: WURLD.sun.position.clone().normalize(),
+					  sunColor: WurldColors.White,
+					  waterColor: WurldColors.LightBlue,
+            distortionScale: 3.0,
+            fog:true
+				  });
+
+				  WURLD.water.mirror = new THREE.Mesh(
+					  new THREE.PlaneBufferGeometry( WURLD.water.parameters.size, WURLD.water.parameters.size),
+					  WURLD.water.obj.material
+				  );
+
+				  WURLD.water.mirror.add( WURLD.water.obj );
+          // WURLD.water.mirror.rotation.x = - Math.PI * 0.5;
+				  WURLD.scene.add( WURLD.water.mirror );
         }
 
         // Other objects we need
@@ -284,6 +320,16 @@ var WURLD = {
         WURLD.keep_camera_above_ground();
 
         // Render the world
+        if(WURLD_SETTINGS.pretty_water){
+
+          WURLD.water.mirror.position.setX(WURLD.player_avatar.position.x);
+          WURLD.water.mirror.position.setY(WURLD.player_avatar.position.y);
+
+          // WURLD.water.obj.matrixNeedsUpdate = true;
+          WURLD.water.obj.updateTextureMatrix();
+          WURLD.water.obj.material.uniforms.time.value += delta * 0.25; // 1.0 / 60.0;
+				  WURLD.water.obj.render();
+        }
         WURLD.renderer.render(WURLD.scene,WURLD.camera);
 
         if(WURLD.stats) WURLD.stats.end();
@@ -500,7 +546,7 @@ var WURLD = {
                 if(data.entities) WURLD.chunk_cache[i][j].entities = WURLD.entity_factory.createEntities(terrainMesh,data.entities);
 
                 // Create some water is any of the terrain is below sea level
-                if(need_water){
+                if(!WURLD_SETTINGS.pretty_water && need_water){
 
                     var sea_geo = new THREE.PlaneBufferGeometry(
                         data.chunk_size,
