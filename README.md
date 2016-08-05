@@ -28,16 +28,6 @@ Tested with Firefox and Chrome, on a MacBook Pro Retina, running OS X El Capitan
 
 YMMV.
 
-TODO
-----
-
-* Movement
- * Left / Right adjust target angle, physics applies forces to get to angle
- * Forward / Back adjust target speed, physics applies forces to get to speed
- * Put player on ground sets target Z position, render loop gradually adjusts player position
-* Gameplay
- * Track last "above water" position, add oxygen gauge, warp back upon drowning
-
 Credits
 -------
 

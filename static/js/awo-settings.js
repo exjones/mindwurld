@@ -31,12 +31,5 @@ var WurldSettings = {
             return WURLD_SETTINGS.skin_name;
         }
         else return null;
-	},
-
-	user_name : function(){
-        if(WURLD_SETTINGS && WURLD_SETTINGS.user_name){
-            return WURLD_SETTINGS.user_name;
-        }
-        else return 'Anonymous Coward';
 	}
 };

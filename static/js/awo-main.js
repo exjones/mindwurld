@@ -239,7 +239,7 @@ var WURLD = {
             // Start listening for server initiated actions
             WURLD.socket = new WurldSocket();
             WURLD.socket.listen();
-            
+
             // Allow the user to turn music on / off
             $('#w-music-btn').click(function(evt){
                 var src = $(evt.target).attr('src');
@@ -248,6 +248,42 @@ var WURLD = {
                 else WURLD.sound.setMusic('on');
             });
         };
+    },
+
+    process_oxygen: function(prev_pos,curr_z,delta){
+
+      // If they were above the water, and now they're not, remember the last "shore" position
+      // And initialise the oxygen bar
+      if(prev_pos.z > 0 && curr_z <= 0){
+        WURLD.last_shore_pos = prev_pos.clone();
+        WURLD.remaining_oxygen = 200;
+        $('#w-oxygen-bar').show();
+        $('#w-oxygen-bar').width(WURLD.remaining_oxygen);
+      }
+
+      // If they're in deep water reduce the oxygen bar, otherwise re-breathe
+      if(curr_z <= -6){
+        WURLD.remaining_oxygen -= 9 * delta;
+
+        // If they're out of oxygen, warp them back to the shore
+        if(WURLD.remaining_oxygen < 0){
+          WURLD.player_avatar.position.copy(WURLD.last_shore_pos);
+          WURLD.warp_camera_to_player();
+          WURLD.physics.setPlayerPosition(WURLD.last_shore_pos.x,WURLD.last_shore_pos.y);
+        }
+        else{
+          $('#w-oxygen-bar').width(WURLD.remaining_oxygen);
+        }
+      }
+      else{
+        WURLD.remaining_oxygen = 200;
+        $('#w-oxygen-bar').width(WURLD.remaining_oxygen);
+      }
+
+      // If they were in the water and now they're not, hide the oxygen bar
+      if(prev_pos.z <= 0 && curr_z > 0){
+        $('#w-oxygen-bar').hide();
+      }
     },
 
     render: function() {
@@ -273,15 +309,19 @@ var WURLD = {
             WURLD.load_necessary_chunks();
 
             // Make sure the player is on the ground
-            var prev_z = WURLD.player_avatar.position.z;
-            WURLD.put_player_on_ground();
+            var prev_pos = WURLD.player_avatar.position.clone();
+            WURLD.put_player_on_ground(delta);
 
             // Make a splash if they enter/leave the water
             var curr_z = WURLD.player_avatar.position.z;
-            if((prev_z > 0 && curr_z <= 0)||(prev_z <= 0 && curr_z > 0)){
+            if((prev_pos.z > 0 && curr_z <= 0)||(prev_pos.z <= 0 && curr_z > 0)){
                 WURLD.sound.splash();
             }
 
+            // Make them drown, or not
+            WURLD.process_oxygen(prev_pos,curr_z,delta);
+
+            // Animate their arms and legs
             if(WURLD.is_walking){
                 WURLD.animator.updatePerson(WURLD.player_avatar,delta);
             }
@@ -377,8 +417,8 @@ var WURLD = {
 
         new_player.rotation.x = Math.PI/2;
 
-        if(obj.user_name){
-            WURLD.set_gamer_tag(new_player,'',obj.user_name);
+        if(obj.skin_name){
+            WURLD.set_gamer_tag(new_player,'',obj.skin_name);
         }
         new_player.position.set(0,0,-1000);
         WURLD.scene.add( new_player );
@@ -407,7 +447,6 @@ var WURLD = {
                 var spritey = WURLD.make_text_sprite(name);
     	        spritey.position.set(0,9,0);
     	        person.add( spritey );
-              WURLD_SETTINGS.user_name = name;
             }
         }
     },
@@ -434,7 +473,8 @@ var WURLD = {
 
         if(curr_src && curr_src.indexOf(src) < 0){
             W_log('Updating skin to',src);
-            var old_name = WURLD_SETTINGS.user_name;
+            var old_name = WURLD_SETTINGS.skin_name;
+            WURLD_SETTINGS.skin_name = skin_name;
             var new_name = skin_name.replace(/_/,' ');
             person.children[0].material.map = WURLD.texture_loader.load(src, function(){
 	            person.children[0].material.needsUpdate = true;
@@ -458,8 +498,7 @@ var WURLD = {
       if(curr >= 0){
         curr++;
         if(curr >= WURLD_SKINS.length) curr = 0;
-        WURLD_SETTINGS.skin_name = WURLD_SKINS[curr];
-        WURLD.set_skin(WURLD.player_avatar,WURLD_SETTINGS.skin_name);
+        WURLD.set_skin(WURLD.player_avatar,WURLD_SKINS[curr]);
       }
     },
 
@@ -468,8 +507,7 @@ var WURLD = {
       if(curr >= 0){
         curr--;
         if(curr < 0) curr = WURLD_SKINS.length - 1;
-        WURLD_SETTINGS.skin_name = WURLD_SKINS[curr];
-        WURLD.set_skin(WURLD.player_avatar,WURLD_SETTINGS.skin_name);
+        WURLD.set_skin(WURLD.player_avatar,WURLD_SKINS[curr]);
       }
     },
 
@@ -569,6 +607,14 @@ var WURLD = {
         }
     },
 
+    deferred_chunk_load: function(ni,nj){
+
+      setTimeout(function(){
+        var li = ni,lj = nj;
+        WURLD.load_chunk(WURLD.current_map.id,li,lj);
+      },100);
+    },
+
     load_necessary_chunks: function(){
 
         if(WURLD.current_map){
@@ -584,7 +630,7 @@ var WURLD = {
 
                 for(var ni = WURLD.center_pos.i - WURLD.cache_size;ni <= WURLD.center_pos.i + WURLD.cache_size;ni++){
                     for(var nj = WURLD.center_pos.j - WURLD.cache_size;nj <= WURLD.center_pos.j + WURLD.cache_size;nj++){
-                        WURLD.load_chunk(WURLD.current_map.id,ni,nj);
+                        WURLD.deferred_chunk_load(ni,nj);
                     }
                 }
 
@@ -617,16 +663,16 @@ var WURLD = {
         }
     },
 
-    put_player_on_ground: function(){
+    put_player_on_ground: function(dt){
 
         var prev_z = WURLD.player_avatar.position.z;
 
         WURLD.put_object_on_ground(WURLD.player_avatar)
 
         var diff = prev_z - WURLD.player_avatar.position.z;
-        if(Math.abs(diff) > 10){
+        if(Math.abs(diff) > 5){
           console.warn('Large change in player height detected',diff);
-          WURLD.player_avatar.position.setZ(prev_z);
+          // WURLD.player_avatar.position.setZ(prev_z);
         }
     },
 
@@ -665,6 +711,14 @@ var WURLD = {
                 break;
             }
         }
+    },
+
+    warp_camera_to_player: function(){
+
+      // Warp the camera to near the player's position
+      WURLD.camera.position.copy(WURLD.calc_camera_pos());
+      WURLD.look_at.copy(WURLD.calc_camera_look());
+      WURLD.camera.lookAt(WURLD.look_at);
     },
 
     load_chest: function(){
@@ -713,18 +767,14 @@ var WURLD = {
                 WURLD.models['person_model'] = obj;
 
 	            WURLD.player_avatar = WURLD.create_person({
-	            	skin_name:WurldSettings.skin_name(),
-					      user_name:WurldSettings.user_name()
+	            	skin_name:WurldSettings.skin_name()
 	            });
 
 	            // Put the player at their starting position
 	            WURLD.player_avatar.position.copy(WurldSettings.start_location());
 	            WURLD.player_avatar.rotation.y = WurldSettings.start_rotation();
 
-	            // Warp the camera to near the player's position
-	            WURLD.camera.position.copy(WURLD.calc_camera_pos());
-              WURLD.look_at.copy(WURLD.calc_camera_look());
-              WURLD.camera.lookAt(WURLD.look_at);
+	            WURLD.warp_camera_to_player();
 
               WURLD.scene.add( WURLD.player_avatar );
 
@@ -744,16 +794,20 @@ var WURLD = {
             W_log('Got map meta data');
             WURLD.current_map = data;
 
-            WURLD.load_necessary_chunks();
-
             var load_delay = setInterval(function(){
                 var found = false;
+                var tot = 0;
+                var todo = 0;
                 for(var i in WURLD.chunk_cache){
                     if(WURLD.chunk_cache[i] !== undefined){
                         for(var j in WURLD.chunk_cache[i]){
                             if(WURLD.chunk_cache[i][j] !== undefined){
                                 W_log('chunk_cache['+i+']['+j+']='+WURLD.chunk_cache[i][j].to_load);
-                                if(WURLD.chunk_cache[i][j].to_load) found = true;
+                                tot++;
+                                if(WURLD.chunk_cache[i][j].to_load) {
+                                  todo++;
+                                  found = true;
+                                }
                             }
                         }
                     }
@@ -761,8 +815,18 @@ var WURLD = {
                 if(!found) {
                     clearInterval(load_delay);
                     deferred.resolve('Loaded wurld');
+                    $('#w-load-progress').hide();
                 }
-            },1000);
+                else if(tot){
+                  var pct = 100 * ((tot - todo) / tot);
+                  $('#w-load-progress').css({
+                    width:pct+'%',
+                    left:((100 - pct)/2)+'%'
+                  });
+                }
+            },100);
+
+            WURLD.load_necessary_chunks();
         });
 
         return deferred.promise();

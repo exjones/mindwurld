@@ -10,9 +10,11 @@ var WurldPhysics = function(x,y,r){
 	this.playerBody = Matter.Bodies.circle(x, -y, 1, {friction: 0,frictionAir: 0,restitution:0,density:100,angle:-Math.PI*0.5});
   Matter.Body.setAngle(this.playerBody,-r + (Math.PI*0.5));
 
-    var thiz = this;
-	this.push_force = {x:0,y:0};
-	this.rotate_force = 0;
+  var thiz = this;
+	this.speed = 0;
+	this.turn = 0;
+	this.angle = this.playerBody.angle;
+
 	Matter.Events.on(this.engine, 'afterUpdate',function(){thiz.onAfterUpdate();});
 
 	// The player body to the world
@@ -44,11 +46,19 @@ var WurldPhysics = function(x,y,r){
 	}
 }
 
+WurldPhysics.prototype.setPlayerPosition = function(x,y){
+		Matter.Body.setPosition(this.playerBody,{x:x,y:-y});
+}
+
 WurldPhysics.prototype.step = function(dt){
 
 	// Step the engine, at a constant rate (passed time is in seconds, we wany ms)
 	this.total_delta += dt * 1000;
 	while(this.total_delta > this.target_delta){
+
+		// Update the requested angle, based on the requested turn speed and the time that's passed
+		this.angle += (this.target_delta / 1000) * this.turn;
+
 		Matter.Engine.update(this.engine,this.target_delta);
 		this.total_delta -= this.target_delta;
 	}
@@ -94,13 +104,18 @@ WurldPhysics.prototype.destroyBody = function(b){
 
 WurldPhysics.prototype.onAfterUpdate = function(){
 
-	// First slow the player down, then possibly push them in the direction they're facing
-	Matter.Body.applyForce(this.playerBody, this.playerBody.position, {x: -this.playerBody.velocity.x, y: -this.playerBody.velocity.y});
-	Matter.Body.applyForce(this.playerBody, this.playerBody.position, Matter.Vector.rotate(this.push_force,this.playerBody.angle));
+	// Force the player to the angle we want
+	this.playerBody.angle = this.angle;
 
-	// If we're not already turning too fast, then rotate the player, otherwise slow them down
-	if(this.rotate_force && this.playerBody.angularSpeed < 0.025) this.playerBody.torque = this.rotate_force;
-	else this.playerBody.torque = -this.playerBody.angularVelocity * 0.25;
+	// Work out what speed we should be going in what direction, and apply a force to get us there
+	var req_spd = Matter.Vector.rotate({x:this.speed,y:0},this.angle);
+	var cur_spd = this.playerBody.velocity;
+	var force = 0.25;
+
+	Matter.Body.applyForce(this.playerBody, this.playerBody.position, {
+		x:force * (req_spd.x - cur_spd.x),
+		y:force * (req_spd.y - cur_spd.y)
+	});
 
 	// Update the physics debug renderer to scroll with the player
 	if(this.render){
@@ -121,10 +136,9 @@ WurldPhysics.prototype.getPlayerPositionY = function(){
 }
 
 WurldPhysics.prototype.setSpeed = function(v){
-	this.push_force.x = v;
-	this.push_force.y = 0;
+	this.speed = v;
 }
 
 WurldPhysics.prototype.setRotation = function(v){
-	this.rotate_force = v * 0.025;
+	this.turn = v;
 }

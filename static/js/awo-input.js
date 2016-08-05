@@ -1,7 +1,7 @@
 var WurldInput = function(){
 
 	this.WALK_SPEED = 0.25;
-	this.TURN_SPEED = 5;
+	this.TURN_SPEED = 3;
 
 	this.listener = new window.keypress.Listener();
 
