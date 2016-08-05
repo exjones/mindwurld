@@ -140,8 +140,8 @@ var WURLD = {
 					  sunDirection: WURLD.sun.position.clone().normalize(),
 					  sunColor: WurldColors.White,
 					  waterColor: WurldColors.LightBlue,
-            distortionScale: 3.0,
-            fog:true
+            distortionScale: 3.0
+            // ,fog:true
 				  });
 
 				  WURLD.water.mirror = new THREE.Mesh(
@@ -236,6 +236,10 @@ var WURLD = {
             // Start listening for input
             WURLD.input.start();
 
+            // Start listening for server initiated actions
+            WURLD.socket = new WurldSocket();
+            WURLD.socket.listen();
+            
             // Allow the user to turn music on / off
             $('#w-music-btn').click(function(evt){
                 var src = $(evt.target).attr('src');

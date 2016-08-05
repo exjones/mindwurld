@@ -12,11 +12,20 @@ WURLD_SETTINGS={
   },
   "pretty_water":true,
   "start_location" : {
-    "x" : -530.923, //0,
-    "y" : 251.285, //0,
-    "z" : -1.00//134.0169
+// Happy Valley
+    //"x" : 0,
+    //"y" : 0,
+    //"z" : 134.0169
+// At the Beach
+    // "x" : -530.923,
+    // "y" : 251.285,
+    // "z" : -1.00
+// Larry's Island
+    x: -1420.0297,
+    y: 1235.278,
+    z: 19.230
   },
-  "start_rotation" : 2.96,//3.14159,
+  "start_rotation" : 3.14159,
   "music" : "off",
   "gamepad":{
     "walk_axis":1,
