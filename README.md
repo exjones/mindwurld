@@ -10,7 +10,7 @@ Instructions
 
 To get started;
 
-* Make sure you've got Node.js installed, plus the Socket.io, Express, and Body Parser modules.
+* Make sure you've got Node.js installed, plus the Socket.io, MQTT, Express, and Body Parser modules.
 * Start up the server with "node server.js" from the command line.
 * Use a decent browser to connect to "http://localhost:4004/"
 * Wait for stuff to load
@@ -22,11 +22,18 @@ To get started;
 
 You can walk around and marvel at the glitchy physics. But don't go too far, only a small section of the map has been ported to static json files.
 
-You can also use another browser (even one on a phone) to connect to "http://your.server.ip:5005/" and use the buttons in the UI to post actions back to the server. Those actions will be broadcast out to the clients, which will act upon them.
+You can also use another browser (even one on a phone) to connect to "http://your.server.ip:5005/" and use the buttons in the UI to post actions back to the ctrlr server. Those actions will send messages to the "mindwurld" topic on the mqtt://test.mosca.io broker. The wurld server listens for messages on that topic, and broadcasts them out to the clients, via socket.io, which controls the 3D experience.
 
 Tested with Firefox and Chrome, on a MacBook Pro Retina, running OS X El Capitan, with a Playstation Dualshock 4 (urban camouflage) controller. A Digital Storm custom gaming PC, running Windows 10, with XBox One controller. And an Alienware Alpha, running Windows 8.1, with XBox 360 controller. The controller client was tested in Chrome on a Nexus 5X.
 
 YMMV.
+
+TODO
+----
+
+* Connect up the server to [MQTT](https://www.npmjs.com/package/mqtt)
+ * wurld server listens to the "mindwurld" topic for messages
+ * ctrlr server sends messages that that topic when the mobile client posts
 
 Credits
 -------

@@ -16,12 +16,14 @@ var
   express 	 = require('express'),
 	socket     = require('socket.io'),
   bodyParser = require('body-parser'),
+	mqtt       = require('mqtt'),
   jsonParser = bodyParser.json(),
 	// The "wurld" server allows browser clients to connect and display the 3D world
 	// The "ctrlr" server is what mobile clients can connect to in order to control the world remotely
   wurld 	   = express(),
 	server     = http.createServer(wurld),
 	ctrlr      = express();
+	broker     = mqtt.connect('mqtt://test.mosca.io');
 
 // Find all the images that we think are skins, so the client can switch between them
 var dir = path.join(__dirname,'static/img');
@@ -87,13 +89,25 @@ io.on('connection',function(client){
   console.log('Client connected',client.sessionID);
 });
 
-// Capture the controller app actions and broadcast it to the clients
+// The MQTT broker subscribes to the mindwurld topic
+broker.on('connect',function(){
+	broker.subscribe('mindwurld');
+});
+
+// Capture the controller app actions and send it on to the MQTT broker
 ctrlr.post('/ACTION',jsonParser,function(req,res){
 
 	var obj = req.body;
 	console.log('Received an action of '+obj.op);
-	io.emit('action',obj);
+	broker.publish('mindwurld',JSON.stringify(obj));
 	res.send({success:true,msg:'Broadcast action "'+obj.op+'"'});
+});
+
+// Any messages the broker gets, which could come from the mobile client, or anywhere, get sent to the wurld client
+broker.on('message',function(topic,message){
+	var obj = JSON.parse(message.toString());
+	console.log('Received a message for action',obj.op);
+	io.emit('action',obj);
 });
 
 // Start up the two servers
