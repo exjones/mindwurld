@@ -5,15 +5,15 @@ var WurldInput = function(){
 
 	this.listener = new window.keypress.Listener();
 
-	this.last_walk_axis = 0;
-	this.last_turn_axis = 0;
+	this.gamepad_walk = false;
+	this.gamepad_turn = false;
 	this.play_button_down = false;
 	this.prev_button_down = false;
 	this.next_button_down = false;
 
 	this.start_walking = function(speed){
+		WURLD.physics.setSpeed(speed);
 		if(!WURLD.is_walking){
-			WURLD.physics.setSpeed(speed);
 			WURLD.sound.startFootsteps();
     	WURLD.is_walking = true;
 		}
@@ -101,34 +101,24 @@ WurldInput.prototype.poll = function(dt){
 			var sens = WURLD_SETTINGS.gamepad.axis_sensitivity;
 
 			var turn_axis = pad.axes[WURLD_SETTINGS.gamepad.turn_axis];
-			if(turn_axis > sens && this.last_turn_axis < sens){
-				this.start_turning(this.TURN_SPEED);
+			if(turn_axis > sens || turn_axis < -sens){
+				this.gamepad_turn = true;
+				this.start_turning(this.TURN_SPEED * turn_axis);
 			}
-			else if(turn_axis < -sens && this.last_turn_axis > -sens){
-				this.start_turning(-this.TURN_SPEED);
-			}
-			else if(
-				(turn_axis <= sens && this.last_turn_axis >= sens) ||
-				(turn_axis >= -sens && this.last_turn_axis <= -sens)
-			){
+			else if(this.gamepad_turn){
+				this.gamepad_turn = false;
 				this.stop_turning();
 			}
-			this.last_turn_axis = turn_axis;
 
 			var walk_axis = pad.axes[WURLD_SETTINGS.gamepad.walk_axis];
-			if(walk_axis > sens && this.last_walk_axis < sens){
-				this.start_walking(-this.WALK_SPEED);
+			if(walk_axis > sens || walk_axis < -sens){
+				this.gamepad_walk = true;
+				this.start_walking(-this.WALK_SPEED * walk_axis);
 			}
-			else if(walk_axis < -sens && this.last_walk_axis > -sens) {
-				this.start_walking(this.WALK_SPEED);
-			}
-			else if(
-				(walk_axis <= sens && this.last_walk_axis >= sens) ||
-				(walk_axis >= -sens && this.last_walk_axis <= -sens)
-			){
+			else if(this.gamepad_walk){
+				this.gamepad_walk = false;
 				this.stop_walking();
 			}
-			this.last_walk_axis = walk_axis;
 
 			if(pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == false){
 				this.play_button_down = true;
