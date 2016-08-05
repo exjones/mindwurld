@@ -22,7 +22,7 @@ To get started;
 
 You can walk around and marvel at the glitchy physics. But don't go too far, only a small section of the map has been ported to static json files.
 
-You can also use another browser (e.g. one on a phone) to connect to "http://your.server.ip:5005/" and use the buttons in the UI to post actions back to the ctrlr server. Those actions will publish messages to the "mindwurld" topic on an MQTT broker. You can either run your own, locally, or use something like [MOSCA](mqtt://test.mosca.io). The wurld server listens for messages on that topic, and broadcasts them out to the clients, via socket.io, which controls the 3D experience.
+You can also use another browser (e.g. one on a phone) to connect to "http://your.server.ip:5005/" and use the buttons in the UI to post actions back to the ctrlr server. Those actions will publish messages to the "mindwurld" topic on an MQTT broker. You can either run your own, locally, or use something like [Mosca's](http://mosca.io/) test server. The wurld server listens for messages on that topic, and broadcasts them out to the clients, via socket.io, which controls the 3D experience.
 
 You should be able to send messages to the broker from any MQTT client, e.g.
 
