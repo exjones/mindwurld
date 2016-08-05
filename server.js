@@ -23,6 +23,7 @@ var
   wurld 	   = express(),
 	server     = http.createServer(wurld),
 	ctrlr      = express();
+	// broker     = mqtt.connect('mqtt://localhost:6006');
 	broker     = mqtt.connect('mqtt://test.mosca.io');
 
 // Find all the images that we think are skins, so the client can switch between them
@@ -91,6 +92,7 @@ io.on('connection',function(client){
 
 // The MQTT broker subscribes to the mindwurld topic
 broker.on('connect',function(){
+	console.log('MQTT broker connected, listening for topic mindwurld');
 	broker.subscribe('mindwurld');
 });
 
@@ -100,7 +102,7 @@ ctrlr.post('/ACTION',jsonParser,function(req,res){
 	var obj = req.body;
 	console.log('Received an action of '+obj.op);
 	broker.publish('mindwurld',JSON.stringify(obj));
-	res.send({success:true,msg:'Broadcast action "'+obj.op+'"'});
+	res.send({success:true,msg:'Published message for "'+obj.op+'" to MQTT'});
 });
 
 // Any messages the broker gets, which could come from the mobile client, or anywhere, get sent to the wurld client
