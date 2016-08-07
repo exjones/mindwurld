@@ -84,25 +84,25 @@ THREE.ShaderLib[ 'water' ] = {
 		'void main()',
 		'{',
 		'	vec4 noise = getNoise( worldPosition.xy );',
-		'	vec3 surfaceNormal = normalize( noise.xzy * vec3( 1.5, 1.0, 1.5 ) );',
+		'	vec3 surfaceNormal = normalize( noise.xyz * vec3( 1.5, 1.5, 1.0 ) );',
 
-		'	vec3 diffuseLight = vec3(0.0);',
+		'	vec3 diffuseLight = vec3(0.3,0.3,1.0);',
 		'	vec3 specularLight = vec3(0.0);',
 
 		'	vec3 worldToEye = eye-worldPosition;',
 		'	vec3 eyeDirection = normalize( worldToEye );',
-		'	sunLight( surfaceNormal, eyeDirection, 100.0, 2.0, 0.5, diffuseLight, specularLight );',
+		'	sunLight( surfaceNormal, eyeDirection, 100.0, 2.0, 0.8, diffuseLight, specularLight );',
 
 		'	float distance = length(worldToEye);',
 
-		'	vec2 distortion = surfaceNormal.xz * ( 0.001 +  1.0 / distance ) * distortionScale;',
-		'	vec3 reflectionSample = mix(waterColor, vec3( texture2D( mirrorSampler, mirrorCoord.xy / mirrorCoord.z + distortion ) ),0.4);',
+		'	vec2 distortion = surfaceNormal.xy * ( 0.001 +  1.0 / distance ) * distortionScale;',
+		'	vec3 reflectionSample = mix(waterColor, vec3( texture2D( mirrorSampler, mirrorCoord.xy / mirrorCoord.z + distortion ) ),0.6);',
 
 		'	float theta = max( dot( eyeDirection, surfaceNormal ), 0.0 );',
 		'	float rf0 = 0.3;',
 		'	float reflectance = rf0 + ( 1.0 - rf0 ) * pow( ( 1.0 - theta ), 5.0 );',
 		'	vec3 scatter = max( 0.0, dot( surfaceNormal, eyeDirection ) ) * waterColor;',
-		'	vec3 albedo =  mix( sunColor * diffuseLight * 0.3 + scatter, ( vec3( 0.1 ) + reflectionSample * 0.9 + reflectionSample * specularLight), reflectance );',
+		'	vec3 albedo =  mix( sunColor * diffuseLight * 0.1 + scatter, ( vec3( 0.05 ) + reflectionSample * 0.95 + reflectionSample * specularLight), reflectance );',
 		'	vec3 outgoingLight = albedo;',
 			THREE.ShaderChunk[ "fog_fragment" ],
 		'	gl_FragColor = vec4( outgoingLight, alpha );',

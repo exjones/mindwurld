@@ -140,8 +140,9 @@ var WURLD = {
 					  sunDirection: WURLD.sun.position.clone().normalize(),
 					  sunColor: WurldColors.White,
 					  waterColor: WurldColors.LightBlue,
-            distortionScale: 3.0
-            // ,fog:true
+            distortionScale: 3.0,
+            noiseScale:0.25,
+            fog:true
 				  });
 
 				  WURLD.water.mirror = new THREE.Mesh(
@@ -369,10 +370,10 @@ var WURLD = {
           WURLD.water.mirror.position.setX(WURLD.player_avatar.position.x);
           WURLD.water.mirror.position.setY(WURLD.player_avatar.position.y);
 
-          // WURLD.water.obj.matrixNeedsUpdate = true;
+          WURLD.water.obj.material.uniforms.time.value += delta * 0.25;
+          WURLD.water.obj.matrixNeedsUpdate = true;
           WURLD.water.obj.updateTextureMatrix();
-          WURLD.water.obj.material.uniforms.time.value += delta * 0.25; // 1.0 / 60.0;
-				  WURLD.water.obj.render();
+          WURLD.water.obj.render();
         }
         WURLD.renderer.render(WURLD.scene,WURLD.camera);
 
