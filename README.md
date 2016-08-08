@@ -35,17 +35,15 @@ YMMV.
 TODO
 ----
 
-* Refactor COMET_POST to something more sensible
-* Then deploy to a [Modulus](https://modulus.io) or other hosted server somewhere
-* Add overlay test and API to access, e.g. for "You Drowned" message, you "Freed a Pig"
-* Create a pig model, and get them to run around
-* Particle effects for opening chests, re-spawn on drown, pig vanishing
+* Add overlay text and API to access, e.g. for "You Drowned" message, you "Freed a Pig"
+* Get the pigs to run around (animate them and add physics)
 * Open chest with remote/mind control message
  * Arrow to point to next chest, and treasure effect on open last one
 * Shorten available breath, allow person to "swim" up on remote/mind message to get extra breath
  * i.e. it's hard to get to Larry's island
-* Create fence/box/cage to capture pigs
- * Remote/mind control message lowers fence (or raises cage) and frees pig
+* Create fence to capture pigs
+ * Remote/mind control message lowers fence and frees pig
+* Particle effects for opening chests, re-spawn on drown, pig vanishing (when out of scene)
 
 Credits
 -------
