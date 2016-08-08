@@ -75,6 +75,11 @@ WurldInput.prototype.start = function(){
         on_keyup: function(){this.stop_turning();}
     });
 
+		this.listener.register_combo({
+				keys: 'p',
+        on_keyup: function(){WURLD.create_pig();}
+		});
+
     this.listener.register_combo({
         keys: 'm',
         on_keyup: function(){WURLD.sound.toggleMusic();}

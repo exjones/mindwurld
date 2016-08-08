@@ -3,12 +3,11 @@ A server that listens on two ports to;
 - serve the 3D world, the supporting resources, and its map chunks to browsers
 - provide a simple (temporary) mobile ui to remotely control the 3D worlds
 */
-console.log('\nStarting up the mindwurld servers');
-console.log('=================================');
+console.log('\nStarting up the mindwurld server');
+console.log('================================');
 
 var
-	wurld_port = 4004,
-	ctrlr_port  = 5005,
+	server_port  = process.env.port || 4004,
 	fs         = require('fs'),
   path       = require('path'),
 	uuid       = require('node-uuid'),
@@ -18,11 +17,11 @@ var
   bodyParser = require('body-parser'),
 	mqtt       = require('mqtt'),
   jsonParser = bodyParser.json(),
-	// The "wurld" server allows browser clients to connect and display the 3D world
-	// The "ctrlr" server is what mobile clients can connect to in order to control the world remotely
+	// The servers allow browser clients to connect and display the 3D world
+	// and the /ctrlr path is what mobile clients can connect to in order to control the world remotely
   wurld 	   = express(),
 	server     = http.createServer(wurld),
-	ctrlr      = express();
+  // Either connect to a local MQTT broker, or the mosca test instance
 	// broker     = mqtt.connect('mqtt://localhost:6006');
 	broker     = mqtt.connect('mqtt://test.mosca.io');
 
@@ -40,14 +39,13 @@ files.forEach(function(f) {
 
 // Both servers get their static resources from the same location
 wurld.use(express.static('static'));
-ctrlr.use(express.static('static'));
 
-// The two servers use different deafult files
+// Default index files for the root path and the mobile client
 wurld.get('/', function (req, res) {
   res.sendFile(__dirname + '/wurld.html');
 });
 
-ctrlr.get('/', function (req, res) {
+wurld.get('/ctrlr', function (req, res) {
   res.sendFile(__dirname + '/ctrlr.html');
 });
 
@@ -67,7 +65,7 @@ wurld.get('/wurld-settings.js',function(req,res){
 });
 
 // Send the map data and handle other posts from the browser client
-wurld.post('/COMET_POST', jsonParser, function (req, res) {
+wurld.post('/POST', jsonParser, function (req, res) {
 
 	var obj = req.body;
 
@@ -97,7 +95,7 @@ broker.on('connect',function(){
 });
 
 // Capture the controller app actions and send it on to the MQTT broker
-ctrlr.post('/ACTION',jsonParser,function(req,res){
+wurld.post('/ctrlr/ACTION',jsonParser,function(req,res){
 
 	var obj = req.body;
 	console.log('Received an action of '+obj.op);
@@ -112,11 +110,7 @@ broker.on('message',function(topic,message){
 	io.emit('action',obj);
 });
 
-// Start up the two servers
-server.listen(wurld_port, function () {
-  console.log('Wurld server is listening on '+wurld_port);
-});
-
-ctrlr.listen(ctrlr_port, function () {
-  console.log('Ctrlr is listening on '+ctrlr_port);
+// Start up the server
+server.listen(server_port, function () {
+  console.log('Wurld server is listening on '+server_port);
 });

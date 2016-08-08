@@ -184,10 +184,11 @@ var WURLD = {
 
     prepare_to_start: function(){
 
-        // When the chest and player models have loaded, load the world, then we can start
+        // When the chest, player, and pig models have loaded, load the world, then we can start
         $.when(
             WURLD.load_player(),
-            WURLD.load_chest()
+            WURLD.load_chest(),
+            WURLD.load_pig()
         ).done(function(){
             for(var a = 0;a < arguments.length;a++) W_log(arguments[a]);
 
@@ -512,10 +513,10 @@ var WURLD = {
       }
     },
 
-    comet_post: function(obj,func){
+    post_back: function(obj,func){
 
     	$.ajax({
-			url: 'COMET_POST',
+			url: '/POST',
 			method:'POST',
 			data: JSON.stringify(obj),
 			success:function(data){
@@ -546,7 +547,7 @@ var WURLD = {
                 to_load:true
             };
 
-            WURLD.comet_post({op:'get_chunk',map_id:1,i:i,j:j},function(data){
+            WURLD.post_back({op:'get_chunk',map_id:1,i:i,j:j},function(data){
 
                 var geometry = new THREE.PlaneGeometry(
                     data.chunk_size,
@@ -748,6 +749,56 @@ var WURLD = {
         return deferred.promise();
     },
 
+    create_pig: function(){
+
+      W_log('Creating a pig');
+
+      var new_pig = WURLD.models['pig_model'].clone();
+      var new_material = WURLD.models['pig_model'].children[0].material.clone();
+
+      for(var i = 0;i < new_pig.children.length;i++){
+        new_pig.children[i].material = new_material;
+      }
+
+      new_pig.scale.set(0.25,0.25,0.25);
+
+      new_pig.position.copy(WURLD.player_avatar.position);
+
+      new_pig.rotation.x = Math.PI/2;
+      new_pig.rotation.y = WURLD.player_avatar.rotation.y + Math.PI * 0.5;
+
+      // Create something to approximate physical collisions
+      // obj.body = WURLD.physics.createBoxBody(def.x + parent.position.x, -(def.y + parent.position.y), 4,8,def.rotation);
+      WURLD.pig = new_pig;
+      WURLD.scene.add( new_pig );
+    },
+
+    load_pig: function(){
+
+        var deferred = $.Deferred();
+
+        // Load the pig mesh, from the static files directory
+        var loader = new THREE.ObjectLoader();
+        loader.setTexturePath('tex/');
+        loader.load(
+            '3ds/pig_model.json',
+            function ( obj ) {
+
+                for(var i = 0;i < obj.children.length;i++){
+                    obj.children[i].castShadow = true;
+                    // obj.children[i].receiveShadow = true;
+                    obj.children[i].material.side = THREE.FrontSide;
+                }
+
+                WURLD.models['pig_model'] = obj;
+
+                deferred.resolve('Loaded a pig');
+            }
+        );
+
+        return deferred.promise();
+    },
+
     load_player: function(){
 
         var deferred = $.Deferred();
@@ -790,7 +841,7 @@ var WURLD = {
 
         var deferred = $.Deferred();
 
-        WURLD.comet_post({op:'get_map',map_id:1},function(data){
+        WURLD.post_back({op:'get_map',map_id:1},function(data){
 
             W_log('Got map meta data');
             WURLD.current_map = data;

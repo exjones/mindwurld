@@ -11,6 +11,7 @@ WurldSocket.prototype.action = function(data){
   if(data.op == 'toggle_music') WURLD.sound.toggleMusic();
   else if(data.op == 'prev_skin') WURLD.prev_skin();
   else if(data.op == 'next_skin') WURLD.next_skin();
+  else if(data.op == 'spawn_pig') WURLD.create_pig();
   else W_warn('Unrecognized action received: '+data.op);
 }
 

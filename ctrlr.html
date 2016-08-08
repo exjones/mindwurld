@@ -26,6 +26,10 @@
 		<div class="ui-grid-solo">
 			<div class="ui-block-a"><a href="toggle_music" class="ui-icon-audio ui-btn-icon-bottom ui-btn ui-shadow ui-corner-all">Toggle Music</a></div>
 		</div>
+		<!-- Just for testing! -->
+		<div class="ui-grid-solo">
+			<div class="ui-block-a"><a href="spawn_pig" class="ui-icon-heart ui-btn-icon-bottom ui-btn ui-shadow ui-corner-all">Spawn a Pig</a></div>
+		</div>
 	</div>
 
 	<div data-role="footer">
@@ -40,7 +44,7 @@ $(document).on('pagecreate',function(){
 		evt.preventDefault();
 		$.mobile.loading('show');
 		$.ajax({
-			url:'ACTION',
+			url:'/ctrlr/ACTION',
 			method:'POST',
 			dataType:'json',
 			data:JSON.stringify({
