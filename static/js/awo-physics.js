@@ -6,7 +6,7 @@ var WurldPhysics = function(x,y,r){
 	// Turn off gravity
 	this.engine.world.gravity.y = 0;
 
-	// Create a moveable chape for the player
+	// Create a moveable shape for the player
 	this.playerBody = Matter.Bodies.circle(x, -y, 1, {friction: 0,frictionAir: 0,restitution:0,density:100,angle:-Math.PI*0.5});
   Matter.Body.setAngle(this.playerBody,-r + (Math.PI*0.5));
 
@@ -16,6 +16,7 @@ var WurldPhysics = function(x,y,r){
 	this.angle = this.playerBody.angle;
 
 	Matter.Events.on(this.engine, 'afterUpdate',function(){thiz.onAfterUpdate();});
+  Matter.Events.on(this.engine, 'collisionActive',function(evt){thiz.onCollisionActive(evt);});
 
 	// The player body to the world
 	Matter.World.add(this.engine.world, this.playerBody);
@@ -94,6 +95,27 @@ WurldPhysics.prototype.createTriangleBody = function(x,y,x1,y1,x2,y2,x3,y3){
   return obj;
 }
 
+WurldPhysics.prototype.createMobBody = function(x,y,r,a,label){
+
+	var obj = Matter.Bodies.circle(x,-y,r,{
+		restitution:0,
+		friction:0,
+	  frictionAir:0.2,
+		label:'Mob_'+label
+	});
+	Matter.Body.setAngle(obj,-a + (Math.PI * 0.5));
+  Matter.World.add(this.engine.world, obj);
+
+  return obj;
+}
+
+WurldPhysics.prototype.transferPositionTo= function(obj){
+
+	obj.position.setX(obj.body.position.x);
+	obj.position.setY(-obj.body.position.y);
+	obj.rotation.y = -obj.body.angle + (Math.PI * 0.5);
+}
+
 WurldPhysics.prototype.destroyBody = function(b){
 
 	if(b){
@@ -101,6 +123,16 @@ WurldPhysics.prototype.destroyBody = function(b){
 	}
 }
 
+WurldPhysics.prototype.moveInDirection = function(body,angle,speed,delta){
+
+	Matter.Body.setAngle(body,-angle + (Math.PI * 0.5));
+	var req_spd = Matter.Vector.rotate({y:speed * delta,x:0},body.angle);
+
+	req_spd.x += body.position.x;
+	req_spd.y += body.position.y;
+
+	Matter.Body.setPosition(body, req_spd);
+}
 
 WurldPhysics.prototype.onAfterUpdate = function(){
 
@@ -120,6 +152,23 @@ WurldPhysics.prototype.onAfterUpdate = function(){
 	// Update the physics debug renderer to scroll with the player
 	if(this.render){
 		Matter.Bounds.shift(this.render.bounds,Matter.Vector.add(this.playerBody.position,{x:-160,y:-120}));
+	}
+}
+
+WurldPhysics.prototype.processMobHit = function(body,collision){
+	
+	// Make the body turn away from the collision (after a fashion!)
+	var dir = Matter.Vector.rotate({x:0,y:1},body.angle);
+	var angle = Matter.Vector.angle(dir,collision.tangent);
+	if(angle > 0) Matter.Body.setAngle(body,body.angle+0.1);
+	else Matter.Body.setAngle(body,body.angle-0.1);
+};
+
+WurldPhysics.prototype.onCollisionActive = function(evt){
+	for(var p in evt.pairs){
+		var coll = evt.pairs[p].collision;
+		if(coll.bodyA.label.startsWith('Mob_')) this.processMobHit(coll.bodyA,coll);
+		if(coll.bodyB.label.startsWith('Mob_')) this.processMobHit(coll.bodyB,coll);
 	}
 }
 

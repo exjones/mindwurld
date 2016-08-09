@@ -32,6 +32,7 @@ WURLD_SETTINGS={
     "axis_sensitivity":0.1,
     "play_button":3,
     "prev_button":14,
-    "next_button":15
+    "next_button":15,
+    "pig_button":2
   }
 };

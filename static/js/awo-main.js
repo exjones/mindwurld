@@ -43,6 +43,7 @@ var WURLD = {
     who_am_i: '',
     min_chest_dist: 10,
     chests: {},
+    pigs: [],
 
     init: function(){
 
@@ -272,6 +273,8 @@ var WURLD = {
           WURLD.player_avatar.position.copy(WURLD.last_shore_pos);
           WURLD.warp_camera_to_player();
           WURLD.physics.setPlayerPosition(WURLD.last_shore_pos.x,WURLD.last_shore_pos.y);
+
+          WURLD.showMessage('You Drowned!',true);
         }
         else{
           $('#w-oxygen-bar').width(WURLD.remaining_oxygen);
@@ -357,12 +360,25 @@ var WURLD = {
             WURLD.sun.position.addVectors(WURLD.player_avatar.position,WURLD.light_position);
             WURLD.sun.target.position.copy(WURLD.player_avatar.position);
             WURLD.sun.target.updateMatrixWorld();
+
+            // Align the compass with the player
+            $('#w-compass-icon').css('transform','rotate('+(WURLD.player_avatar.rotation.y * (180/Math.PI))+'deg)');
         }
 
-        // Align the compass with the player
-        $('#w-compass-icon').css('transform','rotate('+(WURLD.player_avatar.rotation.y * (180/Math.PI))+'deg)');
+        // Animate the pigs
+        var to_destroy = [];
+        for(p in WURLD.pigs){
+          var pig = WURLD.pigs[p];
+          WURLD.animator.updatePig(pig,delta);
+          WURLD.physics.transferPositionTo(pig);
+          WURLD.physics.moveInDirection(pig.body,pig.rotation.y,7.0,delta);
+          if(!WURLD.put_object_on_ground(pig)) to_destroy.push(p);
+          else if(pig.position.z < -5) to_destroy.push(p);
+        }
+        var i;
+        while(i = to_destroy.pop()) WURLD.destroy_pig(i);
 
-	    // Keep the camera above the ground and the water
+	      // Keep the camera above the ground and the water
         WURLD.keep_camera_above_ground();
 
         // Render the world
@@ -680,6 +696,7 @@ var WURLD = {
 
     put_object_on_ground: function(p){
 
+        var intersected = false;
         if(p){
             var top = 1000;
             var start = (new THREE.Vector3()).copy(p.position);
@@ -690,10 +707,13 @@ var WURLD = {
             for(var i = 0;i<intersects.length;i++) {
                 if(intersects[i].object.geometry.type == 'PlaneGeometry'){
                     p.position.setZ(top - intersects[ i ].distance);
+                    intersected = true;
                     break;
                 }
             }
         }
+
+        return intersected;
     },
 
     keep_camera_above_ground: function(){
@@ -749,7 +769,30 @@ var WURLD = {
         return deferred.promise();
     },
 
-    create_pig: function(){
+    destroy_pig: function(idx){
+
+      WURLD.sound.squeal();
+
+      var pig = WURLD.pigs[idx];
+
+      WURLD.scene.remove(pig);
+
+      /*
+      // TODO: Fix the bugs with this!
+      WURLD.entity_factory.destroyChildren(pig);
+
+      if(pig.material) pig.material.dispose();
+      if(pig.geometry) pig.geometry.dispose();
+      */
+
+      WURLD.physics.destroyBody(pig.body);
+
+      WURLD.pigs[idx] = null;
+      WURLD.pigs.splice(idx,1);
+      pig = null;
+    },
+
+    spawn_pig_at: function(pos,rot){
 
       W_log('Creating a pig');
 
@@ -762,15 +805,26 @@ var WURLD = {
 
       new_pig.scale.set(0.25,0.25,0.25);
 
-      new_pig.position.copy(WURLD.player_avatar.position);
+      new_pig.position.copy(pos);
 
       new_pig.rotation.x = Math.PI/2;
-      new_pig.rotation.y = WURLD.player_avatar.rotation.y + Math.PI * 0.5;
+      new_pig.rotation.y = rot - Math.PI * 0.5;
+
+      var offs = new THREE.Vector3(10,-5,0);
+      offs.applyAxisAngle(new THREE.Vector3(0,0,1),new_pig.rotation.y);
+      new_pig.position.add(offs);
 
       // Create something to approximate physical collisions
-      // obj.body = WURLD.physics.createBoxBody(def.x + parent.position.x, -(def.y + parent.position.y), 4,8,def.rotation);
-      WURLD.pig = new_pig;
+      new_pig.body = WURLD.physics.createMobBody(new_pig.position.x, new_pig.position.y, 3,new_pig.rotation.y,'Pig_'+(WURLD.pigs.length+1));
       WURLD.scene.add( new_pig );
+      WURLD.sound.snort();
+
+      WURLD.pigs.push(new_pig);
+    },
+
+    create_pig: function(){
+
+      WURLD.spawn_pig_at(WURLD.player_avatar.position,WURLD.player_avatar.rotation.y);
     },
 
     load_pig: function(){
@@ -980,5 +1034,21 @@ var WURLD = {
     	$(canvas).remove();
 
 	    return sprite;
+    },
+
+    message_timeout: null,
+
+    showMessage: function(msg,err){
+      if(WURLD.message_timeout) clearTimeout(WURLD.message_timeout);
+
+      $('#w-message-banner').text(msg);
+
+      if(err) WURLD.sound.error();
+      else WURLD.sound.ok();
+
+      $('#w-message-banner').fadeIn();
+      WURLD.message_timeout = setTimeout(function(){
+        $('#w-message-banner').fadeOut();
+      },5000);
     }
 };

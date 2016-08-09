@@ -19,8 +19,9 @@ To get started;
 * Turn with A and D, or gamepad Right Stick
 * Turn music on/off by clicking the icon, hitting the M key, or gamepad Triangle (Y on XBone)
 * Switch skins with Left / Right cursor keys, or controller d-pad Left / Right (or Up / Down in Firefox)
+* Spawn a pig with P or Square (X on Xbox gamepad) or using the button in the controller UI.
 
-You can walk around and marvel at the glitchy physics. But don't go too far, only a small section of the map has been ported to static json files.
+You can walk around and marvel at the glitchy physics and the bad garbage collection. But don't go too far, only a small section of the map has been ported to static json files.
 
 You can also use another browser (e.g. one on a phone) to connect to "http://your.server.ip:4004/ctrlr" and use the buttons in the UI to post actions back to the server. Those actions will publish messages to the "mindwurld" topic on an MQTT broker. You can either run your own, locally, or use something like [Mosca's](http://mosca.io/) test server. The wurld server listens for messages on that topic, and broadcasts them out to the clients, via socket.io, which controls the 3D experience.
 
@@ -31,19 +32,6 @@ You should be able to send messages to the broker from any MQTT client, e.g.
 Tested with Firefox and Chrome, on a MacBook Pro Retina, running OS X El Capitan, with a Playstation Dualshock 4 (urban camouflage) controller. A Digital Storm custom gaming PC, running Windows 10, with XBox One controller. And an Alienware Alpha, running Windows 8.1, with XBox 360 controller. The controller client was tested in Chrome on a Nexus 5X.
 
 YMMV.
-
-TODO
-----
-
-* Add overlay text and API to access, e.g. for "You Drowned" message, you "Freed a Pig"
-* Get the pigs to run around (animate them and add physics)
-* Open chest with remote/mind control message
- * Arrow to point to next chest, and treasure effect on open last one
-* Shorten available breath, allow person to "swim" up on remote/mind message to get extra breath
- * i.e. it's hard to get to Larry's island
-* Create fence to capture pigs
- * Remote/mind control message lowers fence and frees pig
-* Particle effects for opening chests, re-spawn on drown, pig vanishing (when out of scene)
 
 Credits
 -------

@@ -1,23 +1,25 @@
 var WurldSound = function(){
-    
+
     this.path = 'sfx/';
-    
+
     this.bgMusic = new Howl({urls:[this.path+'almost-a-love-story.ogg',this.path+'almost-a-love-story.mp3'],loop:true});
-    
-    this.startSfx = new Howl({urls:[this.path+'drawer-opening-sfx.wav']});    
-    this.okSfx = new Howl({urls:[this.path+'ok-sfx.wav']});    
-    this.errorSfx = new Howl({urls:[this.path+'error-sfx.wav']});    
-    this.openChestSfx = new Howl({urls:[this.path+'open_chest.wav']});    
-    this.closeChestSfx = new Howl({urls:[this.path+'close_chest.wav']});        
-    this.waterSplashSfx = new Howl({urls:[this.path+'water_splash.wav']});        
-    
+
+    this.startSfx = new Howl({urls:[this.path+'drawer-opening-sfx.wav']});
+    this.okSfx = new Howl({urls:[this.path+'ok-sfx.wav']});
+    this.errorSfx = new Howl({urls:[this.path+'error-sfx.wav']});
+    this.openChestSfx = new Howl({urls:[this.path+'open_chest.wav']});
+    this.closeChestSfx = new Howl({urls:[this.path+'close_chest.wav']});
+    this.waterSplashSfx = new Howl({urls:[this.path+'water_splash.wav']});
+    this.pigSnortsSfx = new Howl({urls:[this.path+'pig-multiple-snorts.wav']});
+    this.pigSquealSfx = new Howl({urls:[this.path+'pig-grunt-and-squeal.wav']});
+
     this.footstepsSfx = new Howl({
         urls:[this.path+'footsteps.wav'],
         loop:true,
         volume:0.4
-    }); 
+    });
     this.footsteps_is_playing = false;
-};           
+};
 
 WurldSound.prototype.startMusic = function(){
     this.bgMusic.play();
@@ -42,6 +44,8 @@ WurldSound.prototype.error = function(){this.errorSfx.play();};
 WurldSound.prototype.openChest = function(){this.openChestSfx.play();};
 WurldSound.prototype.closeChest = function(){this.closeChestSfx.play();};
 WurldSound.prototype.splash = function(){this.waterSplashSfx.play();};
+WurldSound.prototype.snort = function(){this.pigSnortsSfx.play();};
+WurldSound.prototype.squeal = function(){this.pigSquealSfx.play();};
 
 WurldSound.prototype.startFootsteps = function(){
     if(!this.footsteps_is_playing){
@@ -55,4 +59,3 @@ WurldSound.prototype.stopFootsteps = function(){
         this.footsteps_is_playing = false;
     }
 };
-        

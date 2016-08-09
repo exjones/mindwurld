@@ -212,3 +212,18 @@ canvas { width: 100%; height: 100%; }
     overflow:hidden;
     display:none;
 }
+
+#w-message-banner{
+  width:100%;
+  height:auto;
+  bottom:50%;
+  position:fixed;
+  z-index:30;
+  text-align:center;
+  background-color:transparent;
+  font-size:15vmin;
+  color:lightGray;
+  text-shadow:0 0 2vmin rgba(0,0,0,0.75);
+  pointer-events: none;
+  display:none;
+}

@@ -10,6 +10,7 @@ var WurldInput = function(){
 	this.play_button_down = false;
 	this.prev_button_down = false;
 	this.next_button_down = false;
+	this.pig_button_down = false;
 
 	this.start_walking = function(speed){
 		WURLD.physics.setSpeed(speed);
@@ -147,6 +148,14 @@ WurldInput.prototype.poll = function(dt){
 			else if(!pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == true){
 				this.next_button_down = false;
 				WURLD.next_skin();
+			}
+
+			if(pad.buttons[WURLD_SETTINGS.gamepad.pig_button].pressed && this.pig_button_down == false){
+				this.pig_button_down = true;
+			}
+			else if(!pad.buttons[WURLD_SETTINGS.gamepad.pig_button].pressed && this.pig_button_down == true){
+				this.pig_button_down = false;
+				WURLD.create_pig();
 			}
 		}
 	}
