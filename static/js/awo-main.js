@@ -362,7 +362,7 @@ var WURLD = {
           var pig = WURLD.pigs[p];
           WURLD.animator.updatePig(pig,delta);
           WURLD.physics.transferPositionTo(pig);
-          WURLD.physics.moveInDirection(pig.body,pig.rotation.y,7.0,delta);
+          WURLD.physics.moveInDirection(pig.body,pig.rotation.y,WURLD_SETTINGS.pig_speed,delta);
           if(!WURLD.put_object_on_ground(pig)) to_destroy.push(p);
           else if(pig.position.z < -5) to_destroy.push(p);
         }
@@ -594,7 +594,9 @@ var WURLD = {
 
                 WURLD.chunk_cache[i][j].mesh = terrainMesh;
                 WURLD.chunk_cache[i][j].to_load = false;
-                if(data.entities) WURLD.chunk_cache[i][j].entities = WURLD.entity_factory.createEntities(terrainMesh,data.entities);
+                if(data.entities) {
+                  WURLD.chunk_cache[i][j].entities = WURLD.entity_factory.createEntities(terrainMesh,data.entities);
+                }
 
                 // Create some water is any of the terrain is below sea level
                 if(!WURLD_SETTINGS.pretty_water && need_water){
@@ -606,6 +608,22 @@ var WURLD = {
 
                     var sea_mesh = new THREE.Mesh( sea_geo, WURLD.sea_material);
                     terrainMesh.add( sea_mesh );
+                }
+
+                // Maybe we need to create a pen for pigs on this chunk?
+                for(var p in WURLD.current_map.pig_pens){
+                  var pen = WURLD.current_map.pig_pens[p];
+                  var x = terrainMesh.position.x;
+                  var y = terrainMesh.position.y;
+                  var sz = data.chunk_size * 0.5;
+                  if(
+                    pen.world_position.x > x - sz &&
+                    pen.world_position.x < x + sz &&
+                    pen.world_position.y > y - sz &&
+                    pen.world_position.y < y + sz
+                  ){
+                    WURLD.current_map.pig_pens[p].obj = WURLD.entity_factory.createPigPen(terrainMesh,pen);
+                  }
                 }
 
                 if(func) func();
@@ -811,10 +829,13 @@ var WURLD = {
 
     destroy_pig: function(idx){
 
-      WURLD.sound.squeal();
-
       var pig = WURLD.pigs[idx];
 
+      // Don't cull pigs associated with a pen
+      // When they're freed, we remove their pen_locator
+      if(pig.pen_locator) return;
+
+      WURLD.sound.squeal();
       WURLD.scene.remove(pig);
 
       // TODO: Fix the memory leaks that happen because of (the lack of) this
@@ -832,7 +853,7 @@ var WURLD = {
       pig = null;
     },
 
-    spawn_pig_at: function(pos,rot){
+    spawn_pig_at: function(pos,rot,loc){
 
       W_log('Creating a pig');
 
@@ -845,26 +866,30 @@ var WURLD = {
 
       new_pig.scale.set(0.25,0.25,0.25);
 
+      new_pig.pen_locator = loc||false;
       new_pig.position.copy(pos);
 
       new_pig.rotation.x = Math.PI/2;
-      new_pig.rotation.y = rot - Math.PI * 0.5;
-
-      var offs = new THREE.Vector3(10,-5,0);
-      offs.applyAxisAngle(new THREE.Vector3(0,0,1),new_pig.rotation.y);
-      new_pig.position.add(offs);
+      new_pig.rotation.y = rot;
 
       // Create something to approximate physical collisions
       new_pig.body = WURLD.physics.createMobBody(new_pig.position.x, new_pig.position.y, 3,new_pig.rotation.y,'Pig_'+(WURLD.pigs.length+1));
       WURLD.scene.add( new_pig );
-      WURLD.sound.snort();
+      if(!new_pig.pen_locator) WURLD.sound.snort();
 
       WURLD.pigs.push(new_pig);
     },
 
     create_pig: function(){
 
-      WURLD.spawn_pig_at(WURLD.player_avatar.position,WURLD.player_avatar.rotation.y);
+      var pos = WURLD.player_avatar.position.clone();
+      var rot = WURLD.player_avatar.rotation.y - Math.PI * 0.5;
+
+      var offs = new THREE.Vector3(10,-5,0);
+      offs.applyAxisAngle(new THREE.Vector3(0,0,1),rot);
+      pos.add(offs);
+
+      WURLD.spawn_pig_at(pos,rot);
     },
 
     load_pig: function(){
@@ -991,16 +1016,58 @@ var WURLD = {
 
     try_open_chest: function(event){
 
+      var pos = WURLD.player_avatar.position.clone();
+
       // See if there's a chest nearby
       for(var ch in WURLD.chests){
         var chest = WURLD.chests[ch];
         if(chest){
-          var diff = (new THREE.Vector3()).subVectors(WURLD.player_avatar.position,chest.getWorldPosition());
+          var diff = (new THREE.Vector3()).subVectors(pos,chest.getWorldPosition());
           if(diff.length() < WURLD.min_chest_dist){
             WURLD.hit_chest(chest.osn_conversation);
+            return;
           }
         }
       }
+
+      // No chests? See if we're near a pig pen
+      for(var p in WURLD.current_map.pig_pens){
+          var pen = WURLD.current_map.pig_pens[p];
+          if(
+            typeof pen.obj != 'undefined' &&
+            pen.obj && 
+            pos.x > pen.world_position.x - ((pen.size.x * 0.5) + WURLD.min_chest_dist) &&
+            pos.x < pen.world_position.x + ((pen.size.x * 0.5) + WURLD.min_chest_dist) &&
+            pos.y > pen.world_position.y - ((pen.size.y * 0.5) + WURLD.min_chest_dist) &&
+            pos.y < pen.world_position.y + ((pen.size.y * 0.5) + WURLD.min_chest_dist)
+          ){
+            WURLD.hit_pen(p);
+            return;
+          }
+      }
+    },
+
+    hit_pen: function(p){
+      var pen = WURLD.current_map.pig_pens[p];
+
+      // Remove the physical bodies
+      for(var b in pen.obj.physics_bodies){
+        WURLD.physics.destroyBody(pen.obj.physics_bodies[b]);
+      }
+
+      // Remove the pen_locator from the pigs
+      for(var g in WURLD.pigs){
+        if(WURLD.pigs[g].pen_locator == pen.obj.pen_locator){
+          WURLD.pigs[g].pen_locator = false;
+        }
+      }
+
+      // Hide the fence
+      // TODO: Slide it down out of view, and only free the pigs once it's gone
+      pen.obj.visible = false;
+      pen.obj = null;
+
+      WURLD.showMessage('Freed '+pen.pig_count+' Pigs');
     },
 
     hit_chest: function(chest_id){
@@ -1024,7 +1091,7 @@ var WURLD = {
             for(c in WURLD.chests){
                 if(WURLD.chests[c].treasureGone) got++;
             }
-            if(got >= 5) WURLD.showMessage('Got All the Treasure!',false,true);
+            if(got >= 5) WURLD.showMessage('Got All Treasures!',false,true);
             else WURLD.showMessage('Got '+got+'/5 Treasures',false,true);
           }
 		  }

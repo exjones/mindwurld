@@ -436,3 +436,102 @@ WurldEntityFactory.prototype.chest = function(parent,def){
 
     return obj;
 };
+
+WurldEntityFactory.prototype.createPigPen = function(terrain,pen) {
+
+  W_log('Creating a pig pen');
+
+  // Work out the center of the pen
+  var x = pen.world_position.x - terrain.position.x;
+  var y = pen.world_position.y - terrain.position.y;
+  var z = this.getHeight(terrain,{x:x,y:y});
+
+  // A wood-type material for the fence
+  var material = new THREE.MeshPhongMaterial({
+      color: WurldColors.SaddleBrown,
+      shading: THREE.FlatShading
+  });
+
+  // An object to hold the entire pen
+  var obj = new THREE.Object3D();
+  obj.castShadow = true;
+
+  // Keep track of where we put the posts
+  var posts = [];
+
+  // Create the corner posts
+  for(var cx = -pen.size.x * 0.5;cx <= pen.size.x * 0.5;cx += pen.size.x){
+    for(var cy = pen.size.y * 0.5;cy >= -pen.size.y * 0.5;cy -= pen.size.y){
+      var cz = this.getHeight(terrain,{x:x + cx,y:y + cy});
+
+      var geometry = new THREE.BoxGeometry( 1, 1, 7 );
+      var post = new THREE.Mesh(geometry,material);
+      post.position.set(cx,cy,(cz - z) + 2);
+      post.castShadow = true;
+
+      obj.add(post);
+
+      posts.push({
+        x: post.position.x,
+        y: post.position.y,
+        z: post.position.z
+      });
+    }
+  }
+
+  // Create the cross bars between the posts
+  var next_post = [1,3,0,2];
+  for(var st = 0;st < posts.length;st++){
+    var en = next_post.pop();
+
+    for(var offs = 0;offs <= 2.5;offs += 2.5){
+      var curve = new THREE.LineCurve3(
+        new THREE.Vector3(posts[st].x,posts[st].y,posts[st].z + offs),
+        new THREE.Vector3(posts[en].x,posts[en].y,posts[en].z + offs)
+      );
+      var bar = new THREE.TubeGeometry(
+        curve,
+        1,
+        0.5,
+        4,
+        false
+      );
+      var cross = new THREE.Mesh(bar,material);
+      cross.castShadow = true;
+      obj.add(cross);
+    }
+  }
+
+  // Put the entire pen in the right position, and add it to the scene
+  obj.position.set(x,y,z);
+  terrain.add(obj);
+
+  // Create boxes for the sides of the pen
+  obj.physics_bodies = [];
+  obj.physics_bodies.push(WURLD.physics.createBoxBody(pen.world_position.x + (pen.size.x * 0.5),-pen.world_position.y,pen.size.y,1,0));
+  obj.physics_bodies.push(WURLD.physics.createBoxBody(pen.world_position.x - (pen.size.x * 0.5),-pen.world_position.y,pen.size.y,1,0));
+  obj.physics_bodies.push(WURLD.physics.createBoxBody(pen.world_position.x,-pen.world_position.y  + (pen.size.y * 0.5),1,pen.size.x,0));
+  obj.physics_bodies.push(WURLD.physics.createBoxBody(pen.world_position.x,-pen.world_position.y - (pen.size.y * 0.5),1,pen.size.x,0));
+
+  // Hack to tie pigs to pens
+  var pen_locator = '('+pen.world_position.x+','+pen.world_position.y+')';
+
+  // Release the pigs
+  for(var pig = 0;pig < pen.pig_count;pig++){
+
+    // Evenly distribute them across the pen
+    var pig_pos = new THREE.Vector3(
+      pen.world_position.x - (pen.size.x * 0.5) + ((pen.size.x / (pen.pig_count + 1)) * (pig + 1)),
+      pen.world_position.y,z
+    );
+
+    WURLD.spawn_pig_at(
+      pig_pos, // Position
+      Math.random() * Math.PI * 2, // Random rotation
+      pen_locator // We know this pig's for a pen
+    );
+  }
+
+  obj.pen_locator = pen_locator;
+  return obj;
+};

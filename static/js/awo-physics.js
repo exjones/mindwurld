@@ -156,12 +156,12 @@ WurldPhysics.prototype.onAfterUpdate = function(){
 }
 
 WurldPhysics.prototype.processMobHit = function(body,collision){
-	
+
 	// Make the body turn away from the collision (after a fashion!)
 	var dir = Matter.Vector.rotate({x:0,y:1},body.angle);
-	var angle = Matter.Vector.angle(dir,collision.tangent);
-	if(angle > 0) Matter.Body.setAngle(body,body.angle+0.1);
-	else Matter.Body.setAngle(body,body.angle-0.1);
+	var angle = Matter.Vector.angle(dir,collision.normal);
+
+  Matter.Body.setAngle(body,body.angle + (angle * 0.1));
 };
 
 WurldPhysics.prototype.onCollisionActive = function(evt){
