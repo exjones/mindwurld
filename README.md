@@ -20,18 +20,10 @@ To get started;
 * Turn music on/off by clicking the icon, hitting the M key, or gamepad Triangle (Y on XBone).
 * Switch skins with Left / Right cursor keys, or controller d-pad Left / Right (or Up / Down in Firefox).
 * Spawn a friendly pig with P or Square (X on Xbox gamepad).
-* When you're near a chest, open it with O, Circle / B button. It might give you treasure!
+* When you're near a chest, open it with O, or Circle / B button. It might give you treasure!
 * Jump (or swim upwards, to breathe, see hint) with Space, or Cross / A button.
 
 You can walk around and marvel at the glitchy physics and the bad garbage collection. But don't go too far, only a small section of the map has been ported to static json files.
-
-You can also use another browser (e.g. one on a phone) to connect to "http://your.server.ip:4004/ctrlr" and use the buttons in the UI to post actions back to the server. Those actions will publish messages to the "mindwurld" topic on an MQTT broker. You can either run your own, locally (in which case you'll have to change server.js accordingly), or use something like [Mosca's](http://mosca.io/) test server. The wurld server listens for messages on that topic, and broadcasts them out to the clients, via socket.io, which controls the 3D experience.
-
-You should be able to send messages to the broker from any MQTT client, e.g.
-
-    mqtt publish -t mindwurld -h 'test.mosca.io' -m '{"op":"next_skin"}'
-
-Supported OPs (i.e. operations) are; toggle_music, prev_skin, next_skin, spawn_pig, open_chest, and jump. Obviously you have to be close to a chest to open it.
 
 Tested with Firefox and Chrome, on a MacBook Pro Retina, running OS X El Capitan, with a Playstation Dualshock 4 (urban camouflage) controller. A Digital Storm custom gaming PC, running Windows 10, with XBox One controller. And an Alienware Alpha, running Windows 8.1, with XBox 360 controller. The controller client was tested in Chrome on a Nexus 5X.
 
@@ -41,6 +33,17 @@ Hint
 ----
 
 The fifth and final chest is on a different island, and you can't _quite_ hold your breath long enough to get there!
+
+Remote Control
+--------------
+
+You can also use another browser (e.g. one on a phone) to connect to "http://your.server.ip:4004/ctrlr" and use the buttons in the UI to post actions back to the server. Those actions will publish messages to the "mindwurld" topic on an MQTT broker. You can either run your own, locally (in which case you'll have to change server.js accordingly), or use something like [Mosca's](http://mosca.io/) test server. The wurld server listens for messages on that topic, and broadcasts them out to the clients, via socket.io, which controls the 3D experience.
+
+You should be able to send messages to the broker from any MQTT client, e.g.
+
+    mqtt publish -t mindwurld -h 'test.mosca.io' -m '{"op":"next_skin"}'
+
+Supported OPs (i.e. operations) are; toggle_music, prev_skin, next_skin, spawn_pig, open_chest, and jump. Obviously the player has to be near to a chest, when the message is received, to open it.
 
 Credits
 -------
