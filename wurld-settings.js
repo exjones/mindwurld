@@ -34,7 +34,13 @@ WURLD_SETTINGS={
     "prev_button":14,
     "next_button":15,
     "pig_button":2,
-    "open_button":1
+    "open_button":1,
+    "jump_button":0
   },
-  min_chest_dist: 10
+  min_chest_dist: 10,
+  jump_speed: 15,
+  gravity: 25,
+  max_oxygen: 200,
+  oxygen_drain: 12,
+  drown_depth: -6
 };

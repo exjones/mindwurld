@@ -12,6 +12,7 @@ var WurldInput = function(){
 	this.next_button_down = false;
 	this.pig_button_down = false;
   this.open_button_down = false;
+  this.jump_button_down = false;
 
 	this.start_walking = function(speed){
 		WURLD.physics.setSpeed(speed);
@@ -90,6 +91,11 @@ WurldInput.prototype.start = function(){
     this.listener.register_combo({
         keys: 'm',
         on_keyup: function(){WURLD.sound.toggleMusic();}
+    });
+
+		this.listener.register_combo({
+        keys: 'space',
+        on_keyup: function(){WURLD.do_jump();}
     });
 
 		this.listener.register_combo({
@@ -177,6 +183,15 @@ WurldInput.prototype.poll = function(dt){
 			else if(!pad.buttons[WURLD_SETTINGS.gamepad.open_button].pressed && this.open_button_down == true){
 				this.open_button_down = false;
 				WURLD.try_open_chest();
+			}
+
+			// Cross or A jumps
+			if(pad.buttons[WURLD_SETTINGS.gamepad.jump_button].pressed && this.jump_button_down == false){
+				this.jump_button_down = true;
+			}
+			else if(!pad.buttons[WURLD_SETTINGS.gamepad.jump_button].pressed && this.jump_button_down == true){
+				this.jump_button_down = false;
+				WURLD.do_jump();
 			}
 		}
 	}

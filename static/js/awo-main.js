@@ -259,14 +259,14 @@ var WURLD = {
       // And initialise the oxygen bar
       if(prev_pos.z > 0 && curr_z <= 0){
         WURLD.last_shore_pos = prev_pos.clone();
-        WURLD.remaining_oxygen = 200;
+        WURLD.remaining_oxygen = WURLD_SETTINGS.max_oxygen;
         $('#w-oxygen-bar').show();
         $('#w-oxygen-bar').width(WURLD.remaining_oxygen);
       }
 
       // If they're in deep water reduce the oxygen bar, otherwise re-breathe
-      if(curr_z <= -6){
-        WURLD.remaining_oxygen -= 9 * delta;
+      if(curr_z <= WURLD_SETTINGS.drown_depth){
+        WURLD.remaining_oxygen -= WURLD_SETTINGS.oxygen_drain * delta;
 
         // If they're out of oxygen, warp them back to the shore
         if(WURLD.remaining_oxygen < 0){
@@ -281,7 +281,7 @@ var WURLD = {
         }
       }
       else{
-        WURLD.remaining_oxygen = 200;
+        WURLD.remaining_oxygen = WURLD_SETTINGS.max_oxygen;
         $('#w-oxygen-bar').width(WURLD.remaining_oxygen);
       }
 
@@ -316,15 +316,6 @@ var WURLD = {
             // Make sure the player is on the ground
             var prev_pos = WURLD.player_avatar.position.clone();
             WURLD.put_player_on_ground(delta);
-
-            // Make a splash if they enter/leave the water
-            var curr_z = WURLD.player_avatar.position.z;
-            if((prev_pos.z > 0 && curr_z <= 0)||(prev_pos.z <= 0 && curr_z > 0)){
-                WURLD.sound.splash();
-            }
-
-            // Make them drown, or not
-            WURLD.process_oxygen(prev_pos,curr_z,delta);
 
             // Animate their arms and legs
             if(WURLD.is_walking){
@@ -702,15 +693,45 @@ var WURLD = {
 
     put_player_on_ground: function(dt){
 
-        var prev_z = WURLD.player_avatar.position.z;
+        var prev_pos = WURLD.player_avatar.position.clone();
+        var prev_z = prev_pos.z;
+        WURLD.put_object_on_ground(WURLD.player_avatar);
 
-        WURLD.put_object_on_ground(WURLD.player_avatar)
+        // Are we jumping?
+        if(WURLD.jump_speed != 0){
 
+          var ground_z = WURLD.player_avatar.position.z;
+          var new_z = prev_z - WURLD.jump_offset;
+          WURLD.jump_offset += WURLD.jump_speed * dt;
+          new_z += WURLD.jump_offset;
+
+          WURLD.player_avatar.position.setZ(Math.max(new_z,ground_z));
+
+          WURLD.jump_speed -= WURLD_SETTINGS.gravity * dt;
+
+          if(new_z < ground_z){
+            WURLD.jump_speed = 0;
+            WURLD.jump_offset = 0;
+          }
+        }
+
+        // Make a splash if they enter/leave the water
+        var curr_z = WURLD.player_avatar.position.z;
+        if((prev_z > 0 && curr_z <= 0)||(prev_z <= 0 && curr_z > 0)){
+            WURLD.sound.splash();
+        }
+
+        // Make them drown, or not
+        WURLD.process_oxygen(prev_pos,curr_z,dt);
+
+        /*
+        // TODO: Fix this glitchiness, that I think is cause by the rays missing the edge of a landscape chunk
         var diff = prev_z - WURLD.player_avatar.position.z;
         if(Math.abs(diff) > 5){
           console.warn('Large change in player height detected',diff);
           // WURLD.player_avatar.position.setZ(prev_z);
         }
+        */
     },
 
     put_object_on_ground: function(p){
@@ -872,6 +893,17 @@ var WURLD = {
         return deferred.promise();
     },
 
+    jump_offset: 0,
+    jump_speed: 0,
+
+    do_jump: function(){
+
+      // Can only jump if underwater, or on ground
+      if(WURLD.player_avatar.position.z < WURLD_SETTINGS.drown_depth || WURLD.jump_offset == 0){
+        WURLD.jump_speed = WURLD_SETTINGS.jump_speed;
+      }
+    },
+
     load_player: function(){
 
         var deferred = $.Deferred();
@@ -987,8 +1019,13 @@ var WURLD = {
 
           if(typeof WURLD.chests[chest_id].treasureGone == 'undefined'){
             WURLD.sound.fanfare();
-            WURLD.showMessage('You Got Treasure!',false,true);
             WURLD.chests[chest_id].treasureGone = true;
+            var got = 0;
+            for(c in WURLD.chests){
+                if(WURLD.chests[c].treasureGone) got++;
+            }
+            if(got >= 5) WURLD.showMessage('Got All the Treasure!',false,true);
+            else WURLD.showMessage('Got '+got+'/5 Treasures',false,true);
           }
 		  }
 	  },
