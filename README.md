@@ -20,14 +20,17 @@ To get started;
 * Turn music on/off by clicking the icon, hitting the M key, or gamepad Triangle (Y on XBone)
 * Switch skins with Left / Right cursor keys, or controller d-pad Left / Right (or Up / Down in Firefox)
 * Spawn a pig with P or Square (X on Xbox gamepad) or using the button in the controller UI.
+* When you're near a chest, open it with O, Circle, B, or the controller UI. It might give you treasure!
 
 You can walk around and marvel at the glitchy physics and the bad garbage collection. But don't go too far, only a small section of the map has been ported to static json files.
 
-You can also use another browser (e.g. one on a phone) to connect to "http://your.server.ip:4004/ctrlr" and use the buttons in the UI to post actions back to the server. Those actions will publish messages to the "mindwurld" topic on an MQTT broker. You can either run your own, locally, or use something like [Mosca's](http://mosca.io/) test server. The wurld server listens for messages on that topic, and broadcasts them out to the clients, via socket.io, which controls the 3D experience.
+You can also use another browser (e.g. one on a phone) to connect to "http://your.server.ip:4004/ctrlr" and use the buttons in the UI to post actions back to the server. Those actions will publish messages to the "mindwurld" topic on an MQTT broker. You can either run your own, locally (in which case you'll have to change server.js accordingly), or use something like [Mosca's](http://mosca.io/) test server. The wurld server listens for messages on that topic, and broadcasts them out to the clients, via socket.io, which controls the 3D experience.
 
 You should be able to send messages to the broker from any MQTT client, e.g.
 
     mqtt publish -t mindwurld -h 'test.mosca.io' -m '{"op":"next_skin"}'
+
+Supported OPs (i.e. operations) are; toggle_music, prev_skin, next_skin, spawn_pig, and open_chest. But obviously you have to be close enough to a chest to open it.
 
 Tested with Firefox and Chrome, on a MacBook Pro Retina, running OS X El Capitan, with a Playstation Dualshock 4 (urban camouflage) controller. A Digital Storm custom gaming PC, running Windows 10, with XBox One controller. And an Alienware Alpha, running Windows 8.1, with XBox 360 controller. The controller client was tested in Chrome on a Nexus 5X.
 
