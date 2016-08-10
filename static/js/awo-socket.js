@@ -12,6 +12,7 @@ WurldSocket.prototype.action = function(data){
   else if(data.op == 'prev_skin') WURLD.prev_skin();
   else if(data.op == 'next_skin') WURLD.next_skin();
   else if(data.op == 'spawn_pig') WURLD.create_pig();
+  else if(data.op == 'open_chest') WURLD.try_open_chest();
   else W_warn('Unrecognized action received: '+data.op);
 }
 

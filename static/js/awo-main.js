@@ -41,7 +41,7 @@ var WURLD = {
     player_avatar: null,
     camera_speed: 15,
     who_am_i: '',
-    min_chest_dist: 10,
+    min_chest_dist: WURLD_SETTINGS.min_chest_dist,
     chests: {},
     pigs: [],
 
@@ -648,7 +648,20 @@ var WURLD = {
 
                 for(var ni = WURLD.center_pos.i - WURLD.cache_size;ni <= WURLD.center_pos.i + WURLD.cache_size;ni++){
                     for(var nj = WURLD.center_pos.j - WURLD.cache_size;nj <= WURLD.center_pos.j + WURLD.cache_size;nj++){
+
+                      // Have we already got this chunk?
+                      // Then show it, otherwise, load it
+                      if(
+                        typeof WURLD.chunk_cache[ni] != 'undefined' &&
+                        typeof WURLD.chunk_cache[ni][nj] != 'undefined' &&
+                        WURLD.chunk_cache[ni][nj].mesh != null
+                      ){
+                        W_log('Showing chunk '+ni+','+nj);
+                        WURLD.chunk_cache[ni][nj].mesh.visible = true;
+                      }
+                      else{
                         WURLD.deferred_chunk_load(ni,nj);
+                      }
                     }
                 }
 
@@ -661,6 +674,11 @@ var WURLD = {
                             parseInt(dj) < WURLD.center_pos.j - WURLD.cache_size ||
                             parseInt(dj) > WURLD.center_pos.j + WURLD.cache_size
                         ){
+                            // New version just hides landscape chunks, rather than destroying them
+                            W_log('Hiding chunk '+di+','+dj);
+                            WURLD.chunk_cache[di][dj].mesh.visible = false;
+
+                            /*
                             var mesh = WURLD.chunk_cache[di][dj].mesh;
 
                             WURLD.entity_factory.destroyEntities(mesh,WURLD.chunk_cache[di][dj].entities);
@@ -674,6 +692,7 @@ var WURLD = {
                                 WURLD.chunk_cache[di][dj].mesh = null;
                                 WURLD.chunk_cache[di][dj].to_load = false;
                             }
+                            */
                         }
                     }
                 }
@@ -777,10 +796,10 @@ var WURLD = {
 
       WURLD.scene.remove(pig);
 
+      // TODO: Fix the memory leaks that happen because of (the lack of) this
       /*
-      // TODO: Fix the bugs with this!
+      // Not sure about this method of removing an Object3D!
       WURLD.entity_factory.destroyChildren(pig);
-
       if(pig.material) pig.material.dispose();
       if(pig.geometry) pig.geometry.dispose();
       */
@@ -938,73 +957,41 @@ var WURLD = {
         return deferred.promise();
     },
 
-    /*
-    TODO: Give people some other way to open / close chests
-    pick_position: function(event){
+    try_open_chest: function(event){
 
-        var raycaster = new THREE.Raycaster();
-        var mouse = new THREE.Vector2();
-
-        // calculate mouse position in normalized device coordinates
-        // (-1 to +1) for both components
-        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-        mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
-        // update the picking ray with the camera and mouse position
-        raycaster.setFromCamera( mouse, WURLD.camera );
-
-        // First, see if we hit a chest
-        var hit_chest = false;
-        var chest_list = [];
-        for(var ch in WURLD.chests){
-            if(WURLD.chests[ch]) chest_list.push(WURLD.chests[ch]);
+      // See if there's a chest nearby
+      for(var ch in WURLD.chests){
+        var chest = WURLD.chests[ch];
+        if(chest){
+          var diff = (new THREE.Vector3()).subVectors(WURLD.player_avatar.position,chest.getWorldPosition());
+          if(diff.length() < WURLD.min_chest_dist){
+            WURLD.hit_chest(chest.osn_conversation);
+          }
         }
-        var chest_intersects = raycaster.intersectObjects( chest_list,true);
-        if(chest_intersects.length > 0){
-
-            for(var c = 0;c < chest_intersects.length;c++){
-
-                // Distance from the player to the click
-                var diff = (new THREE.Vector3()).subVectors(WURLD.player_avatar.position,chest_intersects[c].point);
-
-                if(diff.length() < WURLD.min_chest_dist){
-                    var osn_conversation = chest_intersects[c].object.parent.osn_conversation;
-                    W_log('Clicked a chest! ('+osn_conversation+')');
-                    // WURLD.show_osn_overlay(osn_conversation);
-					WURLD.hit_chest(osn_conversation);
-                    hit_chest = true;
-                    break;
-                }
-            }
-        }
-
-        if(!hit_chest){
-            // Otherwise, calculate the ground objects intersecting the picking ray
-            var intersects = raycaster.intersectObjects( WURLD.scene.children);
-            for(var i = 0;i<intersects.length;i++) {
-                if(intersects[i].object.geometry.type == 'PlaneGeometry' && intersects[i].point.z > 0){
-                    WURLD.pointer.position.copy(intersects[i].point);
-                    WURLD.move_to_pointer = true;
-                    break;
-                }
-            }
-        }
+      }
     },
 
-	hit_chest: function(chest_id){
+    hit_chest: function(chest_id){
 
-		if(WURLD.chests[chest_id].isOpen){
-            WURLD.sound.closeChest();
-            WURLD.animator.closeChest(WURLD.chests[chest_id]);
-			WURLD.chests[chest_id].isOpen = false;
-		}
-		else{
+      W_log('Hit a chest '+chest_id);
+
+		  if(WURLD.chests[chest_id].isOpen){
+        WURLD.sound.closeChest();
+        WURLD.animator.closeChest(WURLD.chests[chest_id]);
+			  WURLD.chests[chest_id].isOpen = false;
+		  }
+		  else{
         	WURLD.sound.openChest();
         	WURLD.animator.openChest(WURLD.chests[chest_id]);
-			WURLD.chests[chest_id].isOpen = true;
-		}
-	},
-	*/
+			    WURLD.chests[chest_id].isOpen = true;
+
+          if(typeof WURLD.chests[chest_id].treasureGone == 'undefined'){
+            WURLD.sound.fanfare();
+            WURLD.showMessage('You Got Treasure!',false,true);
+            WURLD.chests[chest_id].treasureGone = true;
+          }
+		  }
+	  },
 
     make_text_sprite: function( message, parameters ){
 
@@ -1038,13 +1025,15 @@ var WURLD = {
 
     message_timeout: null,
 
-    showMessage: function(msg,err){
+    showMessage: function(msg,err,mute){
       if(WURLD.message_timeout) clearTimeout(WURLD.message_timeout);
 
       $('#w-message-banner').text(msg);
 
-      if(err) WURLD.sound.error();
-      else WURLD.sound.ok();
+      if(!mute){
+        if(err) WURLD.sound.error();
+        else WURLD.sound.ok();
+      }
 
       $('#w-message-banner').fadeIn();
       WURLD.message_timeout = setTimeout(function(){

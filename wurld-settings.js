@@ -33,6 +33,8 @@ WURLD_SETTINGS={
     "play_button":3,
     "prev_button":14,
     "next_button":15,
-    "pig_button":2
-  }
+    "pig_button":2,
+    "open_button":1
+  },
+  min_chest_dist: 10
 };

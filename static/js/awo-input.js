@@ -11,6 +11,7 @@ var WurldInput = function(){
 	this.prev_button_down = false;
 	this.next_button_down = false;
 	this.pig_button_down = false;
+  this.open_button_down = false;
 
 	this.start_walking = function(speed){
 		WURLD.physics.setSpeed(speed);
@@ -81,6 +82,11 @@ WurldInput.prototype.start = function(){
         on_keyup: function(){WURLD.create_pig();}
 		});
 
+		this.listener.register_combo({
+				keys: 'o',
+        on_keyup: function(){WURLD.try_open_chest();}
+		});
+
     this.listener.register_combo({
         keys: 'm',
         on_keyup: function(){WURLD.sound.toggleMusic();}
@@ -106,6 +112,7 @@ WurldInput.prototype.poll = function(dt){
 		if(pad){
 			var sens = WURLD_SETTINGS.gamepad.axis_sensitivity;
 
+			// Right stick Left/Right turns the player
 			var turn_axis = pad.axes[WURLD_SETTINGS.gamepad.turn_axis];
 			if(turn_axis > sens || turn_axis < -sens){
 				this.gamepad_turn = true;
@@ -116,6 +123,7 @@ WurldInput.prototype.poll = function(dt){
 				this.stop_turning();
 			}
 
+			// Left stick Up/Down makes the player walk
 			var walk_axis = pad.axes[WURLD_SETTINGS.gamepad.walk_axis];
 			if(walk_axis > sens || walk_axis < -sens){
 				this.gamepad_walk = true;
@@ -126,6 +134,7 @@ WurldInput.prototype.poll = function(dt){
 				this.stop_walking();
 			}
 
+			// Triangle or Y toggles the music on and off
 			if(pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == false){
 				this.play_button_down = true;
 			}
@@ -134,6 +143,7 @@ WurldInput.prototype.poll = function(dt){
 				WURLD.sound.toggleMusic();
 			}
 
+			// Left on the d-pad (or Up in Firefox, it seems) changes to the previous skin
 			if(pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == false){
 				this.prev_button_down = true;
 			}
@@ -142,6 +152,7 @@ WurldInput.prototype.poll = function(dt){
 				WURLD.prev_skin();
 			}
 
+			// Right on the d-pad (Down in Firefox) changes to the next skin
 			if(pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == false){
 				this.next_button_down = true;
 			}
@@ -150,12 +161,22 @@ WurldInput.prototype.poll = function(dt){
 				WURLD.next_skin();
 			}
 
+			// Square or X spawns a pig near the player
 			if(pad.buttons[WURLD_SETTINGS.gamepad.pig_button].pressed && this.pig_button_down == false){
 				this.pig_button_down = true;
 			}
 			else if(!pad.buttons[WURLD_SETTINGS.gamepad.pig_button].pressed && this.pig_button_down == true){
 				this.pig_button_down = false;
 				WURLD.create_pig();
+			}
+
+			// Circle or B tries to open any chest that's nearby
+			if(pad.buttons[WURLD_SETTINGS.gamepad.open_button].pressed && this.open_button_down == false){
+				this.open_button_down = true;
+			}
+			else if(!pad.buttons[WURLD_SETTINGS.gamepad.open_button].pressed && this.open_button_down == true){
+				this.open_button_down = false;
+				WURLD.try_open_chest();
 			}
 		}
 	}
