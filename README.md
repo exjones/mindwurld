@@ -13,15 +13,15 @@ To get started;
 * Make sure you've got Node.js installed, plus the Socket.io, MQTT, Express, and Body Parser modules.
 * Start up the server with "node server.js" from the command line.
 * Use a decent browser to connect to "http://your.server.ip:4004/"
-* Wait for stuff to load
-* Hit a key, click the mouse, or press a button on your gamepad
-* Walk with W and S, or gamepad Left Stick
-* Turn with A and D, or gamepad Right Stick
-* Turn music on/off by clicking the icon, hitting the M key, or gamepad Triangle (Y on XBone)
-* Switch skins with Left / Right cursor keys, or controller d-pad Left / Right (or Up / Down in Firefox)
-* Spawn a pig with P or Square (X on Xbox gamepad) or using the button in the controller UI.
-* When you're near a chest, open it with O, Circle, B, or the controller UI. It might give you treasure!
-* Jump (or swim upwards, to breathe, see hint) with Space, Cross button or A
+* Wait for stuff to load.
+* Hit a key, click the mouse, or press a button on your gamepad.
+* Walk with W and S, or gamepad Left Stick.
+* Turn with A and D, or gamepad Right Stick.
+* Turn music on/off by clicking the icon, hitting the M key, or gamepad Triangle (Y on XBone).
+* Switch skins with Left / Right cursor keys, or controller d-pad Left / Right (or Up / Down in Firefox).
+* Spawn a friendly pig with P or Square (X on Xbox gamepad).
+* When you're near a chest, open it with O, Circle / B button. It might give you treasure!
+* Jump (or swim upwards, to breathe, see hint) with Space, or Cross / A button.
 
 You can walk around and marvel at the glitchy physics and the bad garbage collection. But don't go too far, only a small section of the map has been ported to static json files.
 
