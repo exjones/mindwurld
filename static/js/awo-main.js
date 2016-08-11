@@ -88,9 +88,6 @@ var WURLD = {
         	WURLD.camera.updateProjectionMatrix();
         });
 
-        // A clock for timing deltas for animation
-        WURLD.clock = new THREE.Clock;
-
         // The camera
         WURLD.camera = new THREE.PerspectiveCamera( 45, $(window).width() / $(window).height(), 1, 3000 );
         WURLD.camera.position.copy(WURLD.camera_position);
@@ -231,6 +228,14 @@ var WURLD = {
             // Get rid of the logos, start rendering, and fade out the mask overlay
             $('.w-logo-banner').animate({bottom: "100%"}, 1000,"easeInBounce");
             $('.w-start-container').animate({top: "100%"}, 1000,"easeInBounce",function(){
+
+                // A clock for timing deltas for animation
+                WURLD.clock = new THREE.Clock;
+
+                // The particles, for treasure
+                WURLD.particles = new WurldParticles();
+
+                // Finally, really start!
                 requestAnimationFrame( WURLD.render );
 
                 $('.w-start-mask').fadeOut(2000);
@@ -386,6 +391,7 @@ var WURLD = {
           WURLD.water.obj.updateTextureMatrix();
           WURLD.water.obj.render();
         }
+        WURLD.particles.render(delta);
         WURLD.renderer.render(WURLD.scene,WURLD.camera);
 
         if(WURLD.stats) WURLD.stats.end();
@@ -1125,6 +1131,11 @@ var WURLD = {
 
               if(typeof chest.treasureGone == 'undefined'){
                 WURLD.sound.fanfare();
+
+                // Fire off some particles for a bit
+                WURLD.particles.show(chest);
+                setTimeout(function(){WURLD.particles.hide();},5000);
+
                 chest.treasureGone = true;
                 var got = 0;
                 for(c in WURLD.chests){

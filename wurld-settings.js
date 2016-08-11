@@ -1,9 +1,15 @@
 WURLD_SETTINGS={
+  // -------------------------
+  // Set this to false to stop
+  // the client from doing things
+  // that are supposed to be
+  // controlled remotely
+  "allow_client_actions":true,
+  // -------------------------
   "debug" : false,
   "debug_lights" : false,
   "debug_physics" : false,
   "show_stats" : true,
-  "allow_client_actions":true,
   "skin_name" : "barry",
   "antialias" : true,
   "dynamic_shadows":{
@@ -13,17 +19,17 @@ WURLD_SETTINGS={
   "pretty_water":true,
   "start_location" : {
     // Happy Valley
-    // "x" : 0,
-    // "y" : 0,
-    // "z" : 134.0169
+    "x" : 0,
+    "y" : 0,
+    "z" : 134.0169
     // At the Beach
     // "x" : -447.13844498880354,
     // "y" : 273.56913138244255,
     // "z" : 8.945790972118402
     // Larry's Island
-    "x": -1420.0297,
-    "y": 1235.278,
-    "z": 19.230
+    // "x": -1420.0297,
+    // "y": 1235.278,
+    // "z": 19.230
   },
   "start_rotation" : 3.14159,
   "music" : "off",
