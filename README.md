@@ -48,11 +48,9 @@ Supported OPs (i.e. operations) are; toggle_music, prev_skin, next_skin, spawn_p
 TODO
 ----
 
-* Determine locations for 5 pig pens
-* Calculate pig freedom percentage, and end messages
+* Add message driven input, e.g. walk message moves for two seconds then stops if another one isn't received
 * Remap messages to meaningful things, e.g. love, lift, push, etc
 * Provide icons to visualize message receipt (mapped to mobile UI)
-* Add message driven input, e.g. walk message moves for two seconds then stops if another one isn't received
 * Add total completion message with timings (limit to 5 minutes?) and persistent (e.g. nedb) leaderboard
 * Add some kind of treasure effect
 * Better AI for pigs. PI, or Pig Intelligence, if you will

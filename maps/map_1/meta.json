@@ -7,6 +7,10 @@
 	"latitude":-155.48418,
 	"longitude":19.5584,
 	"pig_pens":[
-		{"world_position":{"x":-437.339,"y":299.032},"size":{"x":25,"y":20},"pig_count":2}
+		{"world_position":{"x": 213.817, "y": -10.709},"size":{"x":25,"y":20},"pig_count":2},
+		{"world_position":{"x": 123.795, "y": -195.015},"size":{"x":20,"y":15},"pig_count":1},
+		{"world_position":{"x": -220.475, "y": -275.948},"size":{"x":20,"y":25},"pig_count":2},
+		{"world_position":{"x": 22.000, "y": 487.894},"size":{"x":35,"y":30},"pig_count":4},
+		{"world_position":{"x": -1394.217, "y": 1412.879},"size":{"x":30,"y":30},"pig_count":3}
 	]
 }

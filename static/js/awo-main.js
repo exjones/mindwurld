@@ -1084,7 +1084,18 @@ var WURLD = {
           pen.obj.visible = false;
           pen.obj = null;
 
-          WURLD.showMessage('Freed '+pen.pig_count+' Pigs');
+          // Calculate the amount of pigs in total, and those freed
+          var capt = 0,free = 0;
+          for(var p = 0;p < WURLD.current_map.pig_pens.length;p++){
+            var chk = WURLD.current_map.pig_pens[p];
+            if(typeof chk.obj == 'undefined' || chk.obj !== null) capt += chk.pig_count;
+            else free += chk.pig_count;
+          }
+          if(capt > 0){
+            var pct = Math.round((free * 100) / (free + capt));
+            WURLD.showMessage('Now '+pct+'% Pigs Free');
+          }
+          else WURLD.showMessage('Freed All the Pigs!');
         }
       );
     },
