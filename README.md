@@ -74,6 +74,8 @@ Additionally, for test purposes (or just fun!) it understands;
 * **next_skin** - The opposite of above.
 * **reload_page** - Refreshes the browser page, essentially reloading and resetting the wurld.
 
+The indicator icons, which match the buttons in the controller UI, at the bottom of the browser window _should_ flash to indicate that the client has received a message from an external source.
+
 Configuration
 -------------
 
