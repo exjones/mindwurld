@@ -14,6 +14,10 @@ var WurldInput = function(){
   this.open_button_down = false;
   this.jump_button_down = false;
 	this.fence_button_down = false;
+	this.start_button_down = false;
+
+	this.walk_timer = null;
+	this.turn_timer = null;
 
 	this.start_walking = function(speed){
 		WURLD.physics.setSpeed(speed);
@@ -41,8 +45,44 @@ var WurldInput = function(){
 	}
 }
 
+// Turn or walk based on an action we received
+// If we don't get another one within the timeout specified, then stop
+WurldInput.prototype.action_turn = function(val){
+	if(this.turn_timer){
+		clearTimeout(this.turn_timer);
+		this.turn_timer = null;
+	}
+
+	this.start_turning(val);
+	this.turn_timer = setTimeout(function(){
+		WURLD.input.stop_turning();
+	},WURLD_SETTINGS.turn_timeout);
+}
+
+WurldInput.prototype.do_left_turn = function(){
+	this.action_turn(-this.TURN_SPEED);
+}
+
+WurldInput.prototype.do_right_turn = function(){
+	this.action_turn(this.TURN_SPEED);
+}
+
+WurldInput.prototype.do_walk = function(){
+
+	if(this.walk_timer){
+		clearTimeout(this.walk_timer);
+		this.walk_timer = null;
+	}
+
+	this.start_walking(this.WALK_SPEED);
+	this.walk_timer = setTimeout(function(){
+		WURLD.input.stop_walking();
+	},WURLD_SETTINGS.walk_timeout);
+}
+
 WurldInput.prototype.start = function(){
 
+	// Client can always walk and turn, even if we're supposed to be responding to actions
 	this.listener.register_combo({
     	keys: 'w',
         prevent_default: true,
@@ -79,6 +119,7 @@ WurldInput.prototype.start = function(){
         on_keyup: function(){this.stop_turning();}
     });
 
+		// These actions can only be done by remote control
 		if(WURLD_SETTINGS.allow_client_actions){
  		  this.listener.register_combo({
         keys: 'space',
@@ -99,22 +140,28 @@ WurldInput.prototype.start = function(){
 					keys: 'i',
 	        on_keyup: function(){WURLD.try_free_pigs();}
 			});
+    }
 
-			this.listener.register_combo({
-	        keys: 'm',
-	        on_keyup: function(){WURLD.sound.toggleMusic();}
-	    });
+		// Can do these things even if we're supposed to be responding to actions
+		this.listener.register_combo({
+	      keys: 'm',
+	      on_keyup: function(){WURLD.sound.toggleMusic();}
+	  });
 
-			this.listener.register_combo({
-	        keys: 'left',
-	        on_keyup: function(){WURLD.prev_skin();}
-	    });
+		this.listener.register_combo({
+	      keys: 'left',
+	      on_keyup: function(){WURLD.prev_skin();}
+	  });
 
-			this.listener.register_combo({
-	        keys: 'right',
-	        on_keyup: function(){WURLD.next_skin();}
-	    });
-		}
+		this.listener.register_combo({
+	      keys: 'right',
+	      on_keyup: function(){WURLD.next_skin();}
+	  });
+
+		this.listener.register_combo({
+	      keys: 'r',
+	      on_keyup: function(){window.location.reload();}
+	  });
 }
 
 WurldInput.prototype.poll = function(dt){
@@ -148,35 +195,56 @@ WurldInput.prototype.poll = function(dt){
 				this.stop_walking();
 			}
 
+  		// Triangle or Y toggles the music on and off
+			if(pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == false){
+				this.play_button_down = true;
+			}
+			else if(!pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == true){
+				this.play_button_down = false;
+				WURLD.sound.toggleMusic();
+			}
+
+			// Left on the d-pad (or Up in Firefox, it seems) changes to the previous skin
+			if(pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == false){
+				this.prev_button_down = true;
+			}
+			else if(!pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == true){
+				this.prev_button_down = false;
+				WURLD.prev_skin();
+			}
+
+			// Right on the d-pad (Down in Firefox) changes to the next skin
+			if(pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == false){
+				this.next_button_down = true;
+			}
+			else if(!pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == true){
+				this.next_button_down = false;
+				WURLD.next_skin();
+			}
+
+			// PS (XB, or Start), Share (Back), Options (Menu), buttons all reload the page
+			if(
+				(
+				pad.buttons[WURLD_SETTINGS.gamepad.start_button].pressed ||
+				pad.buttons[WURLD_SETTINGS.gamepad.share_button].pressed ||
+				pad.buttons[WURLD_SETTINGS.gamepad.options_button].pressed
+			  ) &&
+				this.start_button_down == false){
+				this.start_button_down = true;
+			}
+			else if(
+				  !(
+					pad.buttons[WURLD_SETTINGS.gamepad.start_button].pressed ||
+					pad.buttons[WURLD_SETTINGS.gamepad.share_button].pressed ||
+					pad.buttons[WURLD_SETTINGS.gamepad.options_button].pressed
+				  ) &&
+					this.start_button_down == true){
+				this.start_button_down = false;
+				window.location.reload();
+			}
+
 			// We don't want people pressing buttons when they should be thinking!
 			if(WURLD_SETTINGS.allow_client_actions){
-
-				// Triangle or Y toggles the music on and off
-				if(pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == false){
-					this.play_button_down = true;
-				}
-				else if(!pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == true){
-					this.play_button_down = false;
-					WURLD.sound.toggleMusic();
-				}
-
-				// Left on the d-pad (or Up in Firefox, it seems) changes to the previous skin
-				if(pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == false){
-					this.prev_button_down = true;
-				}
-				else if(!pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == true){
-					this.prev_button_down = false;
-					WURLD.prev_skin();
-				}
-
-				// Right on the d-pad (Down in Firefox) changes to the next skin
-				if(pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == false){
-					this.next_button_down = true;
-				}
-				else if(!pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == true){
-					this.next_button_down = false;
-					WURLD.next_skin();
-				}
 
 				// Square or X spawns a pig near the player
 				if(pad.buttons[WURLD_SETTINGS.gamepad.pig_button].pressed && this.pig_button_down == false){

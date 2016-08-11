@@ -37,7 +37,10 @@ WURLD_SETTINGS={
     "pig_button":2,
     "open_button":1,
     "jump_button":0,
-    "fence_button":5
+    "fence_button":5,
+    "start_button":16,
+    "share_button":8,
+    "options_button":9
   },
   "min_chest_dist": 10,
   "jump_speed": 15,
@@ -47,5 +50,7 @@ WURLD_SETTINGS={
   "drown_depth": -6,
   "pig_speed": 7,
   "walk_speed":0.25,
-  "turn_speed":3
+  "turn_speed":3,
+  "turn_timeout":250,
+  "walk_timeout":2000
 };
