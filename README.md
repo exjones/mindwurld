@@ -48,7 +48,6 @@ Supported OPs (i.e. operations) are; toggle_music, prev_skin, next_skin, spawn_p
 TODO
 ----
 
-* Separate out fence hit-check
 * Determine locations for 5 pig pens
 * Calculate pig freedom percentage, and end messages
 * Remap messages to meaningful things, e.g. love, lift, push, etc

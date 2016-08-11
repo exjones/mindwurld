@@ -1017,7 +1017,7 @@ var WURLD = {
         return deferred.promise();
     },
 
-    try_open_chest: function(event){
+    try_open_chest: function(){
 
       var pos = WURLD.player_avatar.position.clone();
 
@@ -1032,8 +1032,13 @@ var WURLD = {
           }
         }
       }
+    },
 
-      // No chests? See if we're near a pig pen
+    try_free_pigs: function(){
+
+      var pos = WURLD.player_avatar.position.clone();
+
+      // See if we're near a pig pen
       for(var p in WURLD.current_map.pig_pens){
           var pen = WURLD.current_map.pig_pens[p];
           if(

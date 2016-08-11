@@ -13,6 +13,7 @@ var WurldInput = function(){
 	this.pig_button_down = false;
   this.open_button_down = false;
   this.jump_button_down = false;
+	this.fence_button_down = false;
 
 	this.start_walking = function(speed){
 		WURLD.physics.setSpeed(speed);
@@ -78,35 +79,42 @@ WurldInput.prototype.start = function(){
         on_keyup: function(){this.stop_turning();}
     });
 
-		this.listener.register_combo({
-				keys: 'p',
-        on_keyup: function(){WURLD.create_pig();}
-		});
-
-		this.listener.register_combo({
-				keys: 'o',
-        on_keyup: function(){WURLD.try_open_chest();}
-		});
-
-    this.listener.register_combo({
-        keys: 'm',
-        on_keyup: function(){WURLD.sound.toggleMusic();}
-    });
-
-		this.listener.register_combo({
+		if(WURLD_SETTINGS.allow_client_actions){
+ 		  this.listener.register_combo({
         keys: 'space',
         on_keyup: function(){WURLD.do_jump();}
-    });
+      });
 
-		this.listener.register_combo({
-        keys: 'left',
-        on_keyup: function(){WURLD.prev_skin();}
-    });
+			this.listener.register_combo({
+					keys: 'p',
+	        on_keyup: function(){WURLD.create_pig();}
+			});
 
-		this.listener.register_combo({
-        keys: 'right',
-        on_keyup: function(){WURLD.next_skin();}
-    });
+			this.listener.register_combo({
+					keys: 'o',
+	        on_keyup: function(){WURLD.try_open_chest();}
+			});
+
+			this.listener.register_combo({
+					keys: 'i',
+	        on_keyup: function(){WURLD.try_free_pigs();}
+			});
+
+			this.listener.register_combo({
+	        keys: 'm',
+	        on_keyup: function(){WURLD.sound.toggleMusic();}
+	    });
+
+			this.listener.register_combo({
+	        keys: 'left',
+	        on_keyup: function(){WURLD.prev_skin();}
+	    });
+
+			this.listener.register_combo({
+	        keys: 'right',
+	        on_keyup: function(){WURLD.next_skin();}
+	    });
+		}
 }
 
 WurldInput.prototype.poll = function(dt){
@@ -140,58 +148,71 @@ WurldInput.prototype.poll = function(dt){
 				this.stop_walking();
 			}
 
-			// Triangle or Y toggles the music on and off
-			if(pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == false){
-				this.play_button_down = true;
-			}
-			else if(!pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == true){
-				this.play_button_down = false;
-				WURLD.sound.toggleMusic();
-			}
+			// We don't want people pressing buttons when they should be thinking!
+			if(WURLD_SETTINGS.allow_client_actions){
 
-			// Left on the d-pad (or Up in Firefox, it seems) changes to the previous skin
-			if(pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == false){
-				this.prev_button_down = true;
-			}
-			else if(!pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == true){
-				this.prev_button_down = false;
-				WURLD.prev_skin();
-			}
+				// Triangle or Y toggles the music on and off
+				if(pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == false){
+					this.play_button_down = true;
+				}
+				else if(!pad.buttons[WURLD_SETTINGS.gamepad.play_button].pressed && this.play_button_down == true){
+					this.play_button_down = false;
+					WURLD.sound.toggleMusic();
+				}
 
-			// Right on the d-pad (Down in Firefox) changes to the next skin
-			if(pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == false){
-				this.next_button_down = true;
-			}
-			else if(!pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == true){
-				this.next_button_down = false;
-				WURLD.next_skin();
-			}
+				// Left on the d-pad (or Up in Firefox, it seems) changes to the previous skin
+				if(pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == false){
+					this.prev_button_down = true;
+				}
+				else if(!pad.buttons[WURLD_SETTINGS.gamepad.prev_button].pressed && this.prev_button_down == true){
+					this.prev_button_down = false;
+					WURLD.prev_skin();
+				}
 
-			// Square or X spawns a pig near the player
-			if(pad.buttons[WURLD_SETTINGS.gamepad.pig_button].pressed && this.pig_button_down == false){
-				this.pig_button_down = true;
-			}
-			else if(!pad.buttons[WURLD_SETTINGS.gamepad.pig_button].pressed && this.pig_button_down == true){
-				this.pig_button_down = false;
-				WURLD.create_pig();
-			}
+				// Right on the d-pad (Down in Firefox) changes to the next skin
+				if(pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == false){
+					this.next_button_down = true;
+				}
+				else if(!pad.buttons[WURLD_SETTINGS.gamepad.next_button].pressed && this.next_button_down == true){
+					this.next_button_down = false;
+					WURLD.next_skin();
+				}
 
-			// Circle or B tries to open any chest that's nearby
-			if(pad.buttons[WURLD_SETTINGS.gamepad.open_button].pressed && this.open_button_down == false){
-				this.open_button_down = true;
-			}
-			else if(!pad.buttons[WURLD_SETTINGS.gamepad.open_button].pressed && this.open_button_down == true){
-				this.open_button_down = false;
-				WURLD.try_open_chest();
-			}
+				// Square or X spawns a pig near the player
+				if(pad.buttons[WURLD_SETTINGS.gamepad.pig_button].pressed && this.pig_button_down == false){
+					this.pig_button_down = true;
+				}
+				else if(!pad.buttons[WURLD_SETTINGS.gamepad.pig_button].pressed && this.pig_button_down == true){
+					this.pig_button_down = false;
+					WURLD.create_pig();
+				}
 
-			// Cross or A jumps
-			if(pad.buttons[WURLD_SETTINGS.gamepad.jump_button].pressed && this.jump_button_down == false){
-				this.jump_button_down = true;
-			}
-			else if(!pad.buttons[WURLD_SETTINGS.gamepad.jump_button].pressed && this.jump_button_down == true){
-				this.jump_button_down = false;
-				WURLD.do_jump();
+				// Circle or B tries to open any chest that's nearby
+				if(pad.buttons[WURLD_SETTINGS.gamepad.open_button].pressed && this.open_button_down == false){
+					this.open_button_down = true;
+				}
+				else if(!pad.buttons[WURLD_SETTINGS.gamepad.open_button].pressed && this.open_button_down == true){
+					this.open_button_down = false;
+					WURLD.try_open_chest();
+				}
+
+				// Right Shoulder tries to free any pigs that are nearby
+				if(pad.buttons[WURLD_SETTINGS.gamepad.fence_button].pressed && this.fence_button_down == false){
+					this.fence_button_down = true;
+				}
+				else if(!pad.buttons[WURLD_SETTINGS.gamepad.fence_button].pressed && this.fence_button_down == true){
+					this.fence_button_down = false;
+					WURLD.try_free_pigs();
+				}
+
+				// Cross or A jumps
+				if(pad.buttons[WURLD_SETTINGS.gamepad.jump_button].pressed && this.jump_button_down == false){
+					this.jump_button_down = true;
+				}
+				else if(!pad.buttons[WURLD_SETTINGS.gamepad.jump_button].pressed && this.jump_button_down == true){
+					this.jump_button_down = false;
+					WURLD.do_jump();
+				}
 			}
 		}
 	}
