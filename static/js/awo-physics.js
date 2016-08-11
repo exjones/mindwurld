@@ -95,6 +95,22 @@ WurldPhysics.prototype.createTriangleBody = function(x,y,x1,y1,x2,y2,x3,y3){
   return obj;
 }
 
+WurldPhysics.prototype.processMobHit = function(body,collision){
+
+	// If we're not already turning away, don't do anything
+	// Otherwise, we'll reverse a bit and stop moving until we've turned away
+  if(!body.isTurning){
+
+		var dir = Matter.Vector.rotate({x:0,y:1},body.angle);
+
+		// No, don't reverse, the physics engine will do that for us
+		// Matter.Body.setPosition(body,{x:body.position.x - (dir.x * 0.1),y:body.position.y - (dir.y * 0.1)});
+
+		body.turnTo = -Matter.Vector.angle(dir,collision.tangent) * 0.5;
+		body.isTurning = true;
+	}
+};
+
 WurldPhysics.prototype.createMobBody = function(x,y,r,a,label){
 
 	var obj = Matter.Bodies.circle(x,-y,r,{
@@ -105,6 +121,8 @@ WurldPhysics.prototype.createMobBody = function(x,y,r,a,label){
 	});
 	Matter.Body.setAngle(obj,-a + (Math.PI * 0.5));
   Matter.World.add(this.engine.world, obj);
+  obj.isTurning = false;
+	obj.turnTo = 0;
 
   return obj;
 }
@@ -125,13 +143,33 @@ WurldPhysics.prototype.destroyBody = function(b){
 
 WurldPhysics.prototype.moveInDirection = function(body,angle,speed,delta){
 
-	Matter.Body.setAngle(body,-angle + (Math.PI * 0.5));
-	var req_spd = Matter.Vector.rotate({y:speed * delta,x:0},body.angle);
+	if(!body.isTurning){
+		Matter.Body.setAngle(body,-angle + (Math.PI * 0.5));
+		var req_spd = Matter.Vector.rotate({y:speed * delta,x:0},body.angle);
 
-	req_spd.x += body.position.x;
-	req_spd.y += body.position.y;
+		req_spd.x += body.position.x;
+		req_spd.y += body.position.y;
 
-	Matter.Body.setPosition(body, req_spd);
+		Matter.Body.setPosition(body, req_spd);
+	}
+	else{
+		var new_ang = body.angle;
+		if(new_ang < body.turnTo){
+				new_ang = body.angle - (WURLD_SETTINGS.turn_speed * delta);
+				if(new_ang < body.turnTo){
+					body.isTurning = false;
+					body.turnTo = 0;
+				}
+		}
+		else if(new_ang > body.turnTo){
+				new_ang = body.angle + (WURLD_SETTINGS.turn_speed * delta);
+				if(new_ang > body.turnTo){
+					body.isTurning = false;
+					body.turnTo = 0;
+				}
+		}
+		Matter.Body.setAngle(body,new_ang);
+	}
 }
 
 WurldPhysics.prototype.onAfterUpdate = function(){
@@ -154,16 +192,6 @@ WurldPhysics.prototype.onAfterUpdate = function(){
 		Matter.Bounds.shift(this.render.bounds,Matter.Vector.add(this.playerBody.position,{x:-160,y:-120}));
 	}
 }
-
-WurldPhysics.prototype.processMobHit = function(body,collision){
-
-	// Make the body move back and turn away from the collision (after a fashion!)
-	var dir = Matter.Vector.rotate({x:0,y:1},body.angle);
-	var angle = Matter.Vector.angle(dir,collision.normal);
-
-	Matter.Body.setPosition(body,{x:body.position.x - (dir.x * 0.1),y:body.position.y - (dir.y * 0.1)});
-  Matter.Body.setAngle(body,body.angle + (angle * 0.1));
-};
 
 WurldPhysics.prototype.onCollisionActive = function(evt){
 	for(var p in evt.pairs){

@@ -50,7 +50,6 @@ TODO
 
 * Add some kind of treasure effect
 * Add total completion message with timings (limit to 5 minutes?) and persistent (e.g. nedb) leaderboard
-* Better AI for pigs. PI, or Pig Intelligence, if you will
 
 Credits
 -------
