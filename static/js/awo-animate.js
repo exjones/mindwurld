@@ -26,11 +26,14 @@ var WurldAnimate = function(){
     this.back_trotter_trans.makeTranslation(0,3,0);
     this.back_trotter_rev_trans.makeTranslation(0,-3,0);
 
-    this.lid_trans.makeTranslation(0,-1.9,-0.4);
-    this.lid_rev_trans.makeTranslation(0,0,0);
+    this.lid_trans.makeTranslation(0,-2.3,-0.6);//-1.9,-0.4);
+    this.lid_rev_trans.makeTranslation(0,0,0.6);;//1.9,0.4);
 
     this.pos_trans = new THREE.Matrix4();
     this.scl_trans = new THREE.Matrix4();
+
+    this.slidingZ = [];
+    this.chests = [];
 };
 
 WurldAnimate.prototype.addTracked = function(key,type,mesh){
@@ -42,8 +45,53 @@ WurldAnimate.prototype.removeTracked = function(key){
     delete this.tracked[key];
 };
 
+WurldAnimate.prototype.slideZ = function(obj,dist,time,func){
+
+  // Check if we're already tracking this object
+  for(var i = 0;i < this.slidingZ.length;i++){
+    if(this.slidingZ[i].obj === obj) return;
+  }
+
+  // Add it to the list of things we're tracking as sliding
+    this.slidingZ.push({
+        obj:obj,
+        dist:dist,
+        time:time,
+        func:func,
+        curr_time: 0,
+        abs_dist: Math.abs(dist),
+        curr_dist: 0,
+        done: false,
+        start_z: obj.position.z
+    });
+};
+
 WurldAnimate.prototype.update = function(delta){
 
+  for(var i = 0;i < this.slidingZ.length;i++){
+    var z = this.slidingZ[i];
+
+    if(!z.done){
+      z.curr_time += delta;
+      z.curr_dist += (z.dist / z.time) * delta;
+
+      // TODO: Remove tracking of objects that are done animating
+      if(Math.abs(z.curr_dist) > z.abs_dist || z.curr_time > z.time){
+        z.done = true;
+        z.curr_dist = z.dist;
+        if(z.func){
+          z.func();
+        }
+      }
+
+      z.obj.position.setZ(z.start_z + z.curr_dist);
+    }
+  }
+
+  this.updateChests(delta);
+
+  /*
+    // Not used? Was for multiplayer I think
     for(var t in this.tracked){
         var obj = this.tracked[t];
         if(obj){
@@ -51,6 +99,7 @@ WurldAnimate.prototype.update = function(delta){
             else if(obj.type == 'chest') this.updateChest(obj,delta);
         }
     }
+    */
 };
 
 WurldAnimate.prototype.setMatrix = function(mat,pos,scl){
@@ -201,30 +250,79 @@ WurldAnimate.prototype.resetPerson = function(obj){
     }
 };
 
-WurldAnimate.prototype.openChest = function(obj,delta){
+WurldAnimate.prototype.updateChests = function(dt){
 
-    if(obj && obj.children) {
+  for(var i = 0;i < this.chests.length;i++){
+    var c = this.chests[i];
+    var a = 0;
 
-        var up_rot = new THREE.Matrix4();
+    c.curr_time += dt;
 
-        up_rot.makeRotationX ( Math.PI / -4 );
-
-        obj.children[0].matrixAutoUpdate = false;
-
-        this.setMatrix(
-            obj.children[0].matrix,
-            obj.children[0].position,
-            obj.children[0].scale,
-            this.lid_trans,
-            up_rot,
-            this.lid_rev_trans
-        );
+    if(c.curr_time > c.total_time){
+      c.done = true;
+      c.curr_time = c.total_time;
+      if(c.func) c.func();
+      a = c.end_angle;
     }
-};
-
-WurldAnimate.prototype.closeChest = function(obj,delta){
-
-    if(obj && obj.children){
-        obj.children[0].matrixAutoUpdate = true;
+    else{
+      a = c.start_angle + (((c.end_angle - c.start_angle) / c.total_time) * c.curr_time);
     }
-};
+
+    if(a == 0){
+      c.obj.children[0].matrixAutoUpdate = true;
+    }
+    else{
+      var up_rot = new THREE.Matrix4();
+
+      up_rot.makeRotationX ( a );
+
+      c.obj.children[0].matrixAutoUpdate = false;
+
+      this.setMatrix(
+          c.obj.children[0].matrix,
+          c.obj.children[0].position,
+          c.obj.children[0].scale,
+          this.lid_trans,
+          up_rot,
+          this.lid_rev_trans
+      );
+    }
+  }
+}
+
+WurldAnimate.prototype.animateChest = function(obj,st,en,time,func){
+
+   // If we're already tracking this...
+   for(var i = 0;i < this.chests.length;i++){
+     if(this.chests[i].obj === obj){
+       // If it's not done, bail
+       if(!this.chests[i].done){
+         return false;
+       }
+       // Otherwise, update its details
+       else{
+         this.chests[i].done = false;
+         this.chests[i].start_angle = st;
+         this.chests[i].curr_time = 0;
+         this.chests[i].total_time = time;
+         this.chests[i].end_angle = en;
+         this.chests[i].func = func;
+
+         return true;
+       }
+     }
+   }
+
+   // If we didn't find it, add it
+   this.chests.push({
+      obj: obj,
+      done:false,
+      start_angle: st,
+      curr_time: 0,
+      total_time: time,
+      end_angle: en,
+      func: func
+   });
+
+   return true;
+}

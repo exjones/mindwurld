@@ -372,6 +372,9 @@ var WURLD = {
 	      // Keep the camera above the ground and the water
         WURLD.keep_camera_above_ground();
 
+        // Update everything else that the animator is tracking
+        WURLD.animator.update(delta);
+
         // Render the world
         if(WURLD_SETTINGS.pretty_water){
 
@@ -1034,8 +1037,9 @@ var WURLD = {
       for(var p in WURLD.current_map.pig_pens){
           var pen = WURLD.current_map.pig_pens[p];
           if(
+            typeof pen.is_hit == 'undefined' &&
             typeof pen.obj != 'undefined' &&
-            pen.obj && 
+            pen.obj &&
             pos.x > pen.world_position.x - ((pen.size.x * 0.5) + WURLD.min_chest_dist) &&
             pos.x < pen.world_position.x + ((pen.size.x * 0.5) + WURLD.min_chest_dist) &&
             pos.y > pen.world_position.y - ((pen.size.y * 0.5) + WURLD.min_chest_dist) &&
@@ -1049,51 +1053,72 @@ var WURLD = {
 
     hit_pen: function(p){
       var pen = WURLD.current_map.pig_pens[p];
+      pen.is_hit = true;
 
-      // Remove the physical bodies
-      for(var b in pen.obj.physics_bodies){
-        WURLD.physics.destroyBody(pen.obj.physics_bodies[b]);
-      }
+      WURLD.animator.slideZ(
+        pen.obj, // The object to animate
+        -7, // Distance to move in Z
+        1,  // Time to take
+        function(){ // Function to execute when done
+          // Remove the physical bodies
+          for(var b in pen.obj.physics_bodies){
+            WURLD.physics.destroyBody(pen.obj.physics_bodies[b]);
+          }
 
-      // Remove the pen_locator from the pigs
-      for(var g in WURLD.pigs){
-        if(WURLD.pigs[g].pen_locator == pen.obj.pen_locator){
-          WURLD.pigs[g].pen_locator = false;
+          // Remove the pen_locator from the pigs
+          var delay = 0;
+          for(var g in WURLD.pigs){
+            if(WURLD.pigs[g].pen_locator == pen.obj.pen_locator){
+              WURLD.pigs[g].pen_locator = false;
+              setTimeout(function(){WURLD.sound.snort();},delay);
+              delay += 1000;
+            }
+          }
+
+          // Hide the fence
+          pen.obj.visible = false;
+          pen.obj = null;
+
+          WURLD.showMessage('Freed '+pen.pig_count+' Pigs');
         }
-      }
-
-      // Hide the fence
-      // TODO: Slide it down out of view, and only free the pigs once it's gone
-      pen.obj.visible = false;
-      pen.obj = null;
-
-      WURLD.showMessage('Freed '+pen.pig_count+' Pigs');
+      );
     },
 
     hit_chest: function(chest_id){
 
       W_log('Hit a chest '+chest_id);
+      var chest = WURLD.chests[chest_id];
 
-		  if(WURLD.chests[chest_id].isOpen){
-        WURLD.sound.closeChest();
-        WURLD.animator.closeChest(WURLD.chests[chest_id]);
-			  WURLD.chests[chest_id].isOpen = false;
+		  if(chest.isOpen){
+        if(WURLD.animator.animateChest(
+          chest, // Object
+          Math.PI / -4, // End angle
+          0, // Start angle
+          0.25, // Time
+          function(){chest.isOpen = false;} // On completion
+        )) WURLD.sound.closeChest();
 		  }
 		  else{
-        	WURLD.sound.openChest();
-        	WURLD.animator.openChest(WURLD.chests[chest_id]);
-			    WURLD.chests[chest_id].isOpen = true;
+        	if(WURLD.animator.animateChest( // See above
+            chest,
+            0,
+            Math.PI / -4,
+            0.25,
+            function(){
+			        chest.isOpen = true;
 
-          if(typeof WURLD.chests[chest_id].treasureGone == 'undefined'){
-            WURLD.sound.fanfare();
-            WURLD.chests[chest_id].treasureGone = true;
-            var got = 0;
-            for(c in WURLD.chests){
-                if(WURLD.chests[c].treasureGone) got++;
+              if(typeof chest.treasureGone == 'undefined'){
+                WURLD.sound.fanfare();
+                chest.treasureGone = true;
+                var got = 0;
+                for(c in WURLD.chests){
+                  if(WURLD.chests[c].treasureGone) got++;
+                }
+                if(got >= 5) WURLD.showMessage('Got All Treasures!',false,true);
+                else WURLD.showMessage('Got '+got+'/5 Treasures',false,true);
+              }
             }
-            if(got >= 5) WURLD.showMessage('Got All Treasures!',false,true);
-            else WURLD.showMessage('Got '+got+'/5 Treasures',false,true);
-          }
+         )) WURLD.sound.openChest();
 		  }
 	  },
 
