@@ -16,6 +16,8 @@ var
 	socket     = require('socket.io'),
   bodyParser = require('body-parser'),
 	mqtt       = require('mqtt'),
+	nedb       = require('nedb'),
+	db         = new nedb({filename:'data/highscores.db',autoload:true}),
   jsonParser = bodyParser.json(),
 	// The servers allow browser clients to connect and display the 3D world
 	// and the /ctrlr path is what mobile clients can connect to in order to control the world remotely
@@ -80,6 +82,22 @@ wurld.post('/POST', jsonParser, function (req, res) {
     else res.send({success:true});
 });
 
+// Record something in the highscore table
+wurld.post('/SCORE', jsonParser, function(req,res){
+	db.insert(req.body,function(err,newDoc){
+			if(err) res.json(err);
+			else res.json(newDoc);
+	});
+});
+
+// Get the data from the highscore table
+wurld.get('/SCORES',function(req,res){
+	db.find({}).sort({total_score:-1,time_stamp:1}).limit(20).exec(function(err,docs){
+		if(err) res.json(err);
+		else res.json(docs);
+	});
+});
+
 // Wurld server connects to the client via socket.io
 var io = socket(server);
 io.on('connection',function(client){
@@ -99,8 +117,17 @@ wurld.post('/ctrlr/ACTION',jsonParser,function(req,res){
 
 	var obj = req.body;
 	console.log('Received an action of '+obj.op);
-	broker.publish('mindwurld',JSON.stringify(obj));
-	res.send({success:true,msg:'Published message for "'+obj.op+'" to MQTT'});
+	if(typeof obj.comm == 'undefined' || obj.comm == 'mqtt'){
+		broker.publish('mindwurld',JSON.stringify(obj));
+		res.send({success:true,msg:'Published message for "'+obj.op+'" to MQTT'});
+	}
+	else if(obj.comm == 'sock'){
+		io.emit('action',obj);
+		res.send({success:true,msg:'Emitted action for "'+obj.op+'" to Socket'});
+	}
+	else{
+		res.send({success:false,msg:'Unknown communication method "'+obj.comm+'"'});
+	}
 });
 
 // Any messages the broker gets, which could come from the mobile client, or anywhere, get sent to the wurld client

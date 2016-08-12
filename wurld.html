@@ -26,6 +26,28 @@
 				<span title="Love" id="w-action-love"><img src="img/love_icon.png"></span>
 				<span title="Push" id="w-action-push"><img src="img/push_icon.png"></span>
 		  </div>
+			<div id="w-countdown"></div>
+			<div id="w-highscore">
+				<div class="w-score-title">High Scores</div>
+				<table class="w-score-columns">
+					<tr>
+						<th class="w-name">Name</th>
+					  <th class="w-pigs">Pigs</th>
+					  <th class="w-treasure">Treasure</th>
+					  <th class="w-total">Total</th>
+				  </tr>
+				  <!-- This will get repeated in code for each highscore record -->
+					<!--
+				  <tr class="w-score">
+					  <td class="w-name">Foo Barson</td>
+					  <td class="w-pigs">5</td>
+					  <td class="w-treasure">2</td>
+					  <td class="w-total">80</td>
+				  </tr>
+				  -->
+				</table>
+				<div id="w-score-restart">r e s t a r t</div>
+			</div>
 
 			<div class="">
 				<div id="w-toolbar-icons"><img id="w-music-btn" src="img/speaker_off_icon.png" title="Turn background music on"/></div>
@@ -68,6 +90,7 @@
 		<script type="text/javascript" src="js/awo-input.js"></script>
 		<script type="text/javascript" src="js/awo-socket.js"></script>
 		<script type="text/javascript" src="js/awo-particles.js"></script>
+	  <script type="text/javascript" src="js/awo-highscore.js"></script>
 
 		<script type="text/javascript">
 		$(document).ready(function(){

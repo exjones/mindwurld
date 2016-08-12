@@ -27,9 +27,20 @@ var WurldSettings = {
     },
 
 	skin_name : function(){
-        if(WURLD_SETTINGS && WURLD_SETTINGS.skin_name){
-            return WURLD_SETTINGS.skin_name;
-        }
-        else return null;
-	}
+
+    if(WURLD_SETTINGS.skin_name == 'RANDOM'){
+      WURLD_SETTINGS.skin_name = WURLD_SKINS[Math.floor(Math.random()*WURLD_SKINS.length)];
+    }
+    return WURLD_SETTINGS.skin_name || WURLD_SKINS[0];
+	},
+
+  message: function(key){
+
+    var msg = WURLD_SETTINGS.messages[key] || key;
+    for(var a = 1;a < arguments.length;a++){
+      var reg = '{'+(a-1)+'}';
+      msg = msg.replace(reg,arguments[a]);
+    }
+    return msg;
+  }
 };

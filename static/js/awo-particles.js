@@ -2,9 +2,11 @@ var WurldParticles = function(){
 
     this.particleGroup = new SPE.Group({
       texture: {
-        value: WURLD.texture_loader.load('img/star.png')
+        value: WURLD.texture_loader.load('img/question-coin.png')
       },
-      maxParticleCount:2000
+      colorize: false,
+      blending: THREE.NormalBlending,
+      maxParticleCount:100
     });
 
     this.emitter = new SPE.Emitter({
@@ -27,9 +29,9 @@ var WurldParticles = function(){
         value: [ new THREE.Color('yellow'), new THREE.Color('orange') ]
       },
       size: {
-        value: 2
+        value: 3
       },
-      particleCount: 2000
+      particleCount: 100
     });
 
     this.hide();

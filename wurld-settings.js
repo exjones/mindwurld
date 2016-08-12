@@ -10,13 +10,16 @@ WURLD_SETTINGS={
   "debug_lights" : false,
   "debug_physics" : false,
   "show_stats" : true,
-  "skin_name" : "barry",
+  "skin_name" : "RANDOM", // Will be randomised upon start, or set to a specific one
+  // --------------------------------------
+  // Turn these off for lower spec machines
   "antialias" : true,
   "dynamic_shadows":{
     "enabled":true,
-    "map_size":4096
+    "map_size":4096 // Or just turn this down
   },
   "pretty_water":true,
+  // --------------------------------------
   "start_location" : {
     // Happy Valley
     "x" : 0,
@@ -58,5 +61,21 @@ WURLD_SETTINGS={
   "walk_speed":0.25,
   "turn_speed":3,
   "turn_timeout":250,
-  "walk_timeout":2000
+  "walk_timeout":2000,
+  "banner_timeout": 5000,
+  "max_game_time":300000, // Five minutes
+  "messages":{
+    "YOU_DROWNED"     :"Gulp, You Drowned!",
+    "PCT_PIGS_FREE"   :"Now {0}% Pigs Free",
+    "ALL_PIGS_FREE"   :"Freed All The Pigs!",
+    "GOT_ALL_TREASURE":"Got All Treasures!",
+    "FOUND_TREASURE"  :"Got {0} Treasures",
+    "OUT_OF_TIME"     :"Time's Up, Scored {0}",
+    "BEAT_GAME"       :"You Won! Scored {0}"
+  },
+  "scores":{
+    "pig_multiplier":100,
+    "treasure_multiplier": 80,
+    "time_multiplier": 25
+  }
 };

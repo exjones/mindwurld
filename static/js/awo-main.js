@@ -12,6 +12,15 @@ var WURLD = {
       mirror: null
     },
 
+    // Allow us to actually finish the game
+    start_time: null,
+    got_all_treasure: false,
+    freed_all_pigs: false,
+    remaining_time: 0,
+    pigs_freed: 0,
+    treasure_found: 0,
+    countdown_timer: null,
+
     scene: null,
     camera: null,
     renderer: null,
@@ -235,6 +244,10 @@ var WURLD = {
                 // The particles, for treasure
                 WURLD.particles = new WurldParticles();
 
+                // Track game completion, and a timer to update the countdown
+                WURLD.start_time = (new Date()).getTime();
+                WURLD.countdown_timer = setInterval(function(){WURLD.update_countdown();},250);
+
                 // Finally, really start!
                 requestAnimationFrame( WURLD.render );
 
@@ -258,6 +271,20 @@ var WURLD = {
         };
     },
 
+    update_countdown: function(){
+
+        var now = (new Date()).getTime();
+        var rem = Math.max(0,WURLD_SETTINGS.max_game_time - (now - WURLD.start_time));
+        var min = Math.floor(rem/60000);
+        var sec = Math.round((rem%60000)/1000);
+
+        $('#w-countdown').html(((min<10)?'0':'')+min+':'+((sec<10)?'0':'')+sec);
+
+        if(rem <= 0){
+          WURLD.check_game_over(true);
+        }
+    },
+
     process_oxygen: function(prev_pos,curr_z,delta){
 
       // If they were above the water, and now they're not, remember the last "shore" position
@@ -279,7 +306,7 @@ var WURLD = {
           WURLD.warp_camera_to_player();
           WURLD.physics.setPlayerPosition(WURLD.last_shore_pos.x,WURLD.last_shore_pos.y);
 
-          WURLD.showMessage('You Drowned!',true);
+          WURLD.showMessage('YOU_DROWNED',true);
         }
         else{
           $('#w-oxygen-bar').width(WURLD.remaining_oxygen);
@@ -460,7 +487,7 @@ var WURLD = {
             }
 
             if(new_name){
-                var name = new_name.toLowerCase().replace(/@oracle.com/,'');
+                var name = new_name.toLowerCase().replace(/_/,' ');
 
                 var spritey = WURLD.make_text_sprite(name);
     	        spritey.position.set(0,9,0);
@@ -1097,11 +1124,16 @@ var WURLD = {
             if(typeof chk.obj == 'undefined' || chk.obj !== null) capt += chk.pig_count;
             else free += chk.pig_count;
           }
+          WURLD.pigs_freed = free;
           if(capt > 0){
             var pct = Math.round((free * 100) / (free + capt));
-            WURLD.showMessage('Now '+pct+'% Pigs Free');
+            WURLD.showMessage(WurldSettings.message('PCT_PIGS_FREE',pct));
           }
-          else WURLD.showMessage('Freed All the Pigs!');
+          else {
+            WURLD.showMessage('ALL_PIGS_FREE');
+            WURLD.freed_all_pigs = true;
+            setTimeout(function(){WURLD.check_game_over();},WURLD_SETTINGS.banner_timeout);
+          }
         }
       );
     },
@@ -1134,15 +1166,20 @@ var WURLD = {
 
                 // Fire off some particles for a bit
                 WURLD.particles.show(chest);
-                setTimeout(function(){WURLD.particles.hide();},5000);
+                setTimeout(function(){WURLD.particles.hide();},WURLD_SETTINGS.banner_timeout);
 
                 chest.treasureGone = true;
                 var got = 0;
                 for(c in WURLD.chests){
                   if(WURLD.chests[c].treasureGone) got++;
                 }
-                if(got >= 5) WURLD.showMessage('Got All Treasures!',false,true);
-                else WURLD.showMessage('Got '+got+'/5 Treasures',false,true);
+                WURLD.treasure_found = got;
+                if(got >= 5) {
+                  WURLD.showMessage('GOT_ALL_TREASURE',false,true);
+                  WURLD.got_all_treasure = true;
+                  setTimeout(function(){WURLD.check_game_over();},WURLD_SETTINGS.banner_timeout);
+                }
+                else WURLD.showMessage(WurldSettings.message('FOUND_TREASURE',got),false,true);
               }
             }
          )) WURLD.sound.openChest();
@@ -1181,9 +1218,10 @@ var WURLD = {
 
     message_timeout: null,
 
-    showMessage: function(msg,err,mute){
+    showMessage: function(key,err,mute){
       if(WURLD.message_timeout) clearTimeout(WURLD.message_timeout);
 
+      var msg = WurldSettings.message(key);
       $('#w-message-banner').text(msg);
 
       if(!mute){
@@ -1194,6 +1232,45 @@ var WURLD = {
       $('#w-message-banner').fadeIn();
       WURLD.message_timeout = setTimeout(function(){
         $('#w-message-banner').fadeOut();
-      },5000);
+      },WURLD_SETTINGS.banner_timeout);
+    },
+
+    check_game_over: function(out_of_time){
+
+      clearInterval(WURLD.countdown_timer);
+
+      if(out_of_time){
+
+        // Stop counting down
+        clearInterval(WURLD.countdown_timer);
+        WURLD.countdown_timer = null;
+
+        // We know we have no time left
+        WURLD.remaining_time = 0;
+
+        // Display the message, and save the score
+        var obj = WurldScores.calculate();
+        WURLD.showMessage(WurldSettings.message('OUT_OF_TIME',obj.total_score),true);
+        setTimeout(function(){
+          WurldScores.save(obj);
+        },WURLD_SETTINGS.banner_timeout);
+      }
+      else if(WURLD.countdown_timer && WURLD.got_all_treasure && WURLD.freed_all_pigs){
+
+        // Stop counting down
+        clearInterval(WURLD.countdown_timer);
+        WURLD.countdown_timer = null;
+
+        // Work out the remaining time, in seconds
+        var now = (new Date()).getTime();
+        WURLD.remaining_time = Math.round(Math.max(0,WURLD_SETTINGS.max_game_time - (now - WURLD.start_time)) / 1000);
+
+        // Show the succes message and save the score
+        var obj = WurldScores.calculate();
+        WURLD.showMessage(WurldSettings.message('BEAT_GAME',obj.total_score));
+        setTimeout(function(){
+          WurldScores.save(obj);
+        },WURLD_SETTINGS.banner_timeout);
+      }
     }
 };
