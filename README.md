@@ -10,13 +10,13 @@ Instructions
 
 To get started;
 
-* Make sure you've got Node.js installed, plus the Socket.io, MQTT, Express, and Body Parser modules via npm.
+* Make sure you've got Node.js installed, plus the Socket.io, MQTT, Express, NeDB, and Body Parser modules via npm.
 * Start up the server with "node server.js" from the command line.
 * Use a browser of your choice (i.e. Chrome) to connect to "http://your.server.ip:4004/"
 * Wait for stuff to load.
 * Hit a key, click the mouse, or press a button on your gamepad.
 
-You can walk around and marvel at the glitchy physics and the bad garbage collection. Find treasure and liberate captured pigs. But don't go too far, only a small section of the map has been ported to static json files.
+You can walk around and marvel at the glitchy physics and the bad garbage collection. Try to find all the treasure and liberate all the captured pigs. But don't go too far, only a small section of the map has been ported to static json files. And you only have a few minutes.
 
 Tested with Firefox and Chrome, on a MacBook Pro Retina, running OS X El Capitan, with a Playstation Dualshock 4 (urban camouflage) controller. A Digital Storm custom gaming PC, running Windows 10, with XBox One controller. And an Alienware Alpha, running Windows 8.1, with XBox 360 controller. The controller client was tested in Chrome on a Nexus 5X.
 

@@ -71,8 +71,8 @@ var WURLD = {
         // Very very very basic animation
         WURLD.animator = new WurldAnimate();
 
-		// We're going to use 2D physics in the ground-plane for collision detection and response
-    WURLD.physics = new WurldPhysics(WURLD_SETTINGS.start_location.x,WURLD_SETTINGS.start_location.y,WURLD_SETTINGS.start_rotation);
+		    // We're going to use 2D physics in the ground-plane for collision detection and response
+        WURLD.physics = new WurldPhysics(WURLD_SETTINGS.start_location.x,WURLD_SETTINGS.start_location.y,WURLD_SETTINGS.start_rotation);
 
         // Set up the Three.js scene
         WURLD.scene = new THREE.Scene();
@@ -134,9 +134,14 @@ var WURLD = {
             WURLD.scene.add(new THREE.CameraHelper(WURLD.sun.shadow.camera));
         }
 
+        // Other objects we need
+        WURLD.entity_factory = new WurldEntityFactory();
+        WURLD.sound = new WurldSound();
+        WURLD.texture_loader = new THREE.TextureLoader();
+
         // Reflective water
         if(WURLD_SETTINGS.pretty_water){
-          WURLD.water.normals = new THREE.TextureLoader().load( 'img/waternormals.jpg' );
+          WURLD.water.normals = WURLD.texture_loader.load( 'img/waternormals.jpg' );
 				  WURLD.water.normals.wrapS = WURLD.water.normals.wrapT = THREE.RepeatWrapping;
 
 				  WURLD.water.obj = new THREE.Water( WURLD.renderer, WURLD.camera, WURLD.scene, {
@@ -157,24 +162,24 @@ var WURLD = {
 					  WURLD.water.obj.material
 				  );
 
+          WURLD.water.mirror.renderOrder = -1; // Force the water to render after the particles
 				  WURLD.water.mirror.add( WURLD.water.obj );
           // WURLD.water.mirror.rotation.x = - Math.PI * 0.5;
 				  WURLD.scene.add( WURLD.water.mirror );
         }
+        else{
+          WURLD.sea_material = new THREE.MeshPhongMaterial( {
+              color: WurldColors.Blue,
+              shading: THREE.FlatShading,
+              opacity: 0.75,
+              transparent: true,
+              specular:WurldColors.LightBlue,
+              shininess:10
+          });
+        }
 
-        // Other objects we need
-        WURLD.entity_factory = new WurldEntityFactory();
-        WURLD.sound = new WurldSound();
-        WURLD.texture_loader = new THREE.TextureLoader();
-
-        WURLD.sea_material = new THREE.MeshPhongMaterial( {
-            color: WurldColors.Blue,
-            shading: THREE.FlatShading,
-            opacity: 0.75,
-            transparent: true,
-            specular:WurldColors.LightBlue,
-            shininess:10
-        });
+        // The particles, for treasure
+        WURLD.particles = new WurldParticles();
 
         if(WURLD_SETTINGS.show_stats){
             WURLD.init_stats();
@@ -240,9 +245,6 @@ var WURLD = {
 
                 // A clock for timing deltas for animation
                 WURLD.clock = new THREE.Clock;
-
-                // The particles, for treasure
-                WURLD.particles = new WurldParticles();
 
                 // Track game completion, and a timer to update the countdown
                 WURLD.start_time = (new Date()).getTime();
@@ -643,6 +645,7 @@ var WURLD = {
                     );
 
                     var sea_mesh = new THREE.Mesh( sea_geo, WURLD.sea_material);
+                    sea_mesh.renderOrder = -1;
                     terrainMesh.add( sea_mesh );
                 }
 
@@ -1052,6 +1055,9 @@ var WURLD = {
 
     try_open_chest: function(){
 
+      // Can't do this if time's run out
+      if(WURLD.countdown_timer == null) return;
+
       var pos = WURLD.player_avatar.position.clone();
 
       // See if there's a chest nearby
@@ -1068,6 +1074,9 @@ var WURLD = {
     },
 
     try_free_pigs: function(){
+
+      // Can't do this if time's run out
+      if(WURLD.countdown_timer == null) return;
 
       var pos = WURLD.player_avatar.position.clone();
 
@@ -1174,7 +1183,7 @@ var WURLD = {
                   if(WURLD.chests[c].treasureGone) got++;
                 }
                 WURLD.treasure_found = got;
-                if(got >= 5) {
+                if(got >= WURLD_SETTINGS.total_chests) {
                   WURLD.showMessage('GOT_ALL_TREASURE',false,true);
                   WURLD.got_all_treasure = true;
                   setTimeout(function(){WURLD.check_game_over();},WURLD_SETTINGS.banner_timeout);
@@ -1237,8 +1246,6 @@ var WURLD = {
 
     check_game_over: function(out_of_time){
 
-      clearInterval(WURLD.countdown_timer);
-
       if(out_of_time){
 
         // Stop counting down
@@ -1255,7 +1262,7 @@ var WURLD = {
           WurldScores.save(obj);
         },WURLD_SETTINGS.banner_timeout);
       }
-      else if(WURLD.countdown_timer && WURLD.got_all_treasure && WURLD.freed_all_pigs){
+      else if(WURLD.got_all_treasure && WURLD.freed_all_pigs){
 
         // Stop counting down
         clearInterval(WURLD.countdown_timer);

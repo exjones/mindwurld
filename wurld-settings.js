@@ -63,13 +63,14 @@ WURLD_SETTINGS={
   "turn_timeout":250,
   "walk_timeout":2000,
   "banner_timeout": 5000,
-  "max_game_time":300000, // Five minutes
+  "total_chests": 6,
+  "max_game_time":600000, // Ten minutes
   "messages":{
     "YOU_DROWNED"     :"Gulp, You Drowned!",
     "PCT_PIGS_FREE"   :"Now {0}% Pigs Free",
     "ALL_PIGS_FREE"   :"Freed All The Pigs!",
-    "GOT_ALL_TREASURE":"Got All Treasures!",
-    "FOUND_TREASURE"  :"Got {0} Treasures",
+    "GOT_ALL_TREASURE":"Got All The Treasure!",
+    "FOUND_TREASURE"  :"Found {0} Treasures",
     "OUT_OF_TIME"     :"Time's Up, Scored {0}",
     "BEAT_GAME"       :"You Won! Scored {0}"
   },

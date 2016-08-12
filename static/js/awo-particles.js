@@ -6,6 +6,10 @@ var WurldParticles = function(){
       },
       colorize: false,
       blending: THREE.NormalBlending,
+      transparent:true,
+      // depthWrite:true,
+      // alphaTest:1,
+      // depthTest:true,
       maxParticleCount:100
     });
 
