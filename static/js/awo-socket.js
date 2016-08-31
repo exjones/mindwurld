@@ -38,3 +38,7 @@ WurldSocket.prototype.listen = function(){
   this.channel.on('connected',function(data){thiz.connected(data);});
   this.channel.on('action',function(data){thiz.action(data);});
 }
+
+WurldSocket.prototype.emit = function(msg) {
+  this.channel.emit('message', msg);
+}

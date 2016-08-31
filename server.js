@@ -19,6 +19,8 @@ var
 	nedb       = require('nedb'),
 	db         = new nedb({filename:'data/highscores.db',autoload:true}),
   jsonParser = bodyParser.json(),
+  	// MiP Robot
+  	robot 	= require('./robot.js'),
 	// The servers allow browser clients to connect and display the 3D world
 	// and the /ctrlr path is what mobile clients can connect to in order to control the world remotely
   wurld 	   = express(),
@@ -26,6 +28,9 @@ var
   // Either connect to a local MQTT broker, or the mosca test instance
 	// broker     = mqtt.connect('mqtt://localhost:6006');
 	broker     = mqtt.connect('mqtt://test.mosca.io');
+
+// try to find a mip robot
+robot.discover();
 
 // Find all the images that we think are skins, so the client can switch between them
 var dir = path.join(__dirname,'static/img');
@@ -103,7 +108,15 @@ var io = socket(server);
 io.on('connection',function(client){
 	client.sessionID = uuid();
 	client.emit('connected',{sessionID:client.sessionID});
-  console.log('Client connected',client.sessionID);
+  	console.log('Client connected',client.sessionID);
+
+  	// RXIE: listen to game event in the browser
+  	client.on('message', function(msg){
+  		console.log("message from game: ", msg);
+
+  		// ask the MiPRobot to perform action
+  		robot.perform(msg);
+  	});
 });
 
 // The MQTT broker subscribes to the mindwurld topic

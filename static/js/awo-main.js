@@ -65,6 +65,8 @@ var WURLD = {
 
     startUp: function(){
 
+        WURLD.eventEmitter = new EventEmitter();
+    
         // Handle keyboard and gamepad input
         WURLD.input = new WurldInput();
 
@@ -928,6 +930,10 @@ var WURLD = {
       offs.applyAxisAngle(new THREE.Vector3(0,0,1),rot);
       pos.add(offs);
 
+        // RXIE: notify pigs spawned
+        WURLD.socket.emit('pig_spawned');
+
+
       WURLD.spawn_pig_at(pos,rot);
     },
 
@@ -1122,6 +1128,9 @@ var WURLD = {
             }
           }
 
+          // RXIE: notify pigs freed
+          WURLD.socket.emit('pigs_freed');
+
           // Hide the fence
           pen.obj.visible = false;
           pen.obj = null;
@@ -1176,6 +1185,12 @@ var WURLD = {
                 // Fire off some particles for a bit
                 WURLD.particles.show(chest);
                 setTimeout(function(){WURLD.particles.hide();},WURLD_SETTINGS.banner_timeout);
+
+                // RXIE: emit event in browser for client side robot control
+                WURLD.eventEmitter.emitEvent("chest_opened");
+                // RXIE: emit event via socket for server side robot control
+                WURLD.socket.emit('chest_opened');
+                console.log("emit: chest_opened");
 
                 chest.treasureGone = true;
                 var got = 0;
@@ -1281,3 +1296,8 @@ var WURLD = {
       }
     }
 };
+
+// WURLD.prototype = Object.clone(EventEmitter.prototype);
+// extend(WURLD, EventEmitter);
+
+

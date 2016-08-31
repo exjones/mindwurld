@@ -43,6 +43,10 @@ var WurldInput = function(){
 	this.stop_turning = function(){
     	WURLD.physics.setRotation(0);
 	}
+
+	WURLD.eventEmitter.on("chest_opened", function() {
+		console.log("detected: chest_opened");
+	});
 }
 
 // Turn or walk based on an action we received
