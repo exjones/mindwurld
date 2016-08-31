@@ -5,10 +5,12 @@ var WurldScores = {
     var obj = {
       player_name: WURLD_SETTINGS.skin_name.replace(/_/,' '),
       pigs_saved: WURLD.pigs_freed,
+      pigs_rescued: WURLD.pigs_rescued,
       treasure_found: WURLD.treasure_found,
       time_remaining: WURLD.remaining_time,
       total_score:
         (WURLD.pigs_freed * WURLD_SETTINGS.scores.pig_multiplier) +
+        (WURLD.pigs_rescued * WURLD_SETTINGS.scores.rescue_multiplier) +
         (WURLD.treasure_found * WURLD_SETTINGS.scores.treasure_multiplier) +
         (WURLD.remaining_time * WURLD_SETTINGS.scores.time_multiplier),
       time_stamp: (new Date()).getTime()
@@ -44,12 +46,14 @@ var WurldScores = {
           var html = '<tr class="w-score">'+
 					  '<td class="w-name">{name}</td>'+
 					  '<td class="w-pigs">{pigs}</td>'+
+            '<td class="w-rescued">{rescued}</td>'+
 					  '<td class="w-treasure">{treasure}</td>'+
 					  '<td class="w-total">{total}</td>'+
 				  '</tr>';
 
           html = html.replace(/{name}/,data[h].player_name);
           html = html.replace(/{pigs}/,data[h].pigs_saved);
+          html = html.replace(/{rescued}/,data[h].pigs_rescued||0);
           html = html.replace(/{treasure}/,data[h].treasure_found);
           html = html.replace(/{total}/,data[h].total_score);
 

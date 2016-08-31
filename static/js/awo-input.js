@@ -15,6 +15,7 @@ var WurldInput = function(){
   this.jump_button_down = false;
 	this.fence_button_down = false;
 	this.start_button_down = false;
+	this.fire_axis_down = false;
 
 	this.walk_timer = null;
 	this.turn_timer = null;
@@ -124,6 +125,11 @@ WurldInput.prototype.start = function(){
  		  this.listener.register_combo({
         keys: 'space',
         on_keyup: function(){WURLD.do_jump();}
+      });
+
+			this.listener.register_combo({
+        keys: 'enter',
+        on_keyup: function(){WURLD.fire_pokeball();}
       });
 
 			this.listener.register_combo({
@@ -245,6 +251,15 @@ WurldInput.prototype.poll = function(dt){
 
 			// We don't want people pressing buttons when they should be thinking!
 			if(WURLD_SETTINGS.allow_client_actions){
+
+				// Right trigger fires the pokeball
+				if(pad.buttons[WURLD_SETTINGS.gamepad.fire_axis].value > 0.5 && this.fire_axis_down == false){
+					this.fire_axis_down = true;
+				}
+				else if(pad.buttons[WURLD_SETTINGS.gamepad.fire_axis].value <= 0.5 && this.fire_axis_down == true){
+					this.fire_axis_down = false;
+					WURLD.fire_pokeball();
+				}
 
 				// Square or X spawns a pig near the player
 				if(pad.buttons[WURLD_SETTINGS.gamepad.pig_button].pressed && this.pig_button_down == false){

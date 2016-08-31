@@ -9,9 +9,7 @@ WurldSocket.prototype.action = function(data){
   W_log('Server says to perform action',data.op);
 
   // Flash the icon that relates to the received action
-  for(var f = 0;f < 3;f++){
-    $('#w-action-'+data.op).animate({backgroundColor:"#f80"},125).animate({backgroundColor:"#fff"},250);
-  }
+  $('#w-action-'+data.op).animate({backgroundColor:"#f80"},250).animate({backgroundColor:"#fff"},500);
 
   // People can always still do these things via the client
   if(data.op == 'toggle_music') WURLD.sound.toggleMusic();
@@ -23,6 +21,7 @@ WurldSocket.prototype.action = function(data){
   else if(data.op == 'lift') WURLD.try_open_chest();
   else if(data.op == 'push') WURLD.try_free_pigs();
   else if(data.op == 'jump') WURLD.do_jump();
+  else if(data.op == 'fire') WURLD.fire_pokeball();
   // These things people may do by remote control
   else if(data.op == 'left') WURLD.input.do_left_turn();
   else if(data.op == 'walk') WURLD.input.do_walk();

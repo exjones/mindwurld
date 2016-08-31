@@ -49,10 +49,15 @@ WURLD_SETTINGS={
     "fence_button":5,
     "start_button":16,
     "share_button":8,
-    "options_button":9
+    "options_button":9,
+    "fire_axis":7
   },
   "min_chest_dist": 10,
   "jump_speed": 15,
+  "ball_size":2,
+  "ball_speed":0.2,
+  "ball_duration":5000,
+  "capture_distance":7,
   "gravity": 25,
   "max_oxygen": 200,
   "oxygen_drain": 12,
@@ -72,10 +77,12 @@ WURLD_SETTINGS={
     "GOT_ALL_TREASURE":"Got All The Treasure!",
     "FOUND_TREASURE"  :"Found {0} Treasures",
     "OUT_OF_TIME"     :"Time's Up, Scored {0}",
-    "BEAT_GAME"       :"You Won! Scored {0}"
+    "BEAT_GAME"       :"You Won! Scored {0}",
+    "CAPTURED_A_PIG"  :"Pig Was Rescued!"
   },
   "scores":{
     "pig_multiplier":100,
+    "rescue_multiplier":20,
     "treasure_multiplier": 80,
     "time_multiplier": 25
   }
