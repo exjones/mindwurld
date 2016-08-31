@@ -18,6 +18,7 @@ var WURLD = {
     freed_all_pigs: false,
     remaining_time: 0,
     pigs_freed: 0,
+    pigs_rescued: 0,
     treasure_found: 0,
     countdown_timer: null,
 
@@ -53,6 +54,12 @@ var WURLD = {
     min_chest_dist: WURLD_SETTINGS.min_chest_dist,
     chests: {},
     pigs: [],
+
+    pokeball: {
+      model: null,
+      mini_model: null,
+      fire_timer: null
+    },
 
     init: function(){
 
@@ -180,8 +187,9 @@ var WURLD = {
           });
         }
 
-        // The particles, for treasure
-        WURLD.particles = new WurldParticles();
+        // Particle systems, for treasure, and pig capture
+        WURLD.treasure_particles = new WurldParticles('treasure');
+        WURLD.capture_particles = new WurldParticles('capture');
 
         if(WURLD_SETTINGS.show_stats){
             WURLD.init_stats();
@@ -392,8 +400,44 @@ var WURLD = {
             $('#w-compass-icon').css('transform','rotate('+(WURLD.player_avatar.rotation.y * (180/Math.PI))+'deg)');
         }
 
+        // Move the pokeball
+        if(WURLD.pokeball.model && WURLD.pokeball.model.visible){
+          WURLD.put_object_on_ground(WURLD.pokeball.model);
+          WURLD.pokeball.model.position.z += WURLD_SETTINGS.ball_size;
+
+          var prev_x = WURLD.pokeball.model.position.x;
+          var prev_y = WURLD.pokeball.model.position.y;
+
+          // Move the ball according to the physics engine
+          if(WURLD.pokeball.body){
+            WURLD.pokeball.model.position.setX(WURLD.pokeball.body.position.x);
+            WURLD.pokeball.model.position.setY(-WURLD.pokeball.body.position.y);
+          }
+
+          var dist_x = WURLD.pokeball.model.position.x - prev_x;
+          var dist_y = WURLD.pokeball.model.position.y - prev_y;
+
+          // Make the ball look as if it's rolling
+          var ang = Math.sqrt((dist_x * dist_x) + (dist_y * dist_y)) / WURLD_SETTINGS.ball_size;
+          if(ang > 0){
+            var vec = new THREE.Vector3(dist_x,dist_y,0);
+            vec.normalize();
+            vec.cross(new THREE.Vector3(0,0,-1));
+
+            var rotWorldMatrix = new THREE.Matrix4();
+            rotWorldMatrix.makeRotationAxis(vec,ang);
+            rotWorldMatrix.multiply(WURLD.pokeball.model.matrix);
+            WURLD.pokeball.model.matrix = rotWorldMatrix;
+            WURLD.pokeball.model.rotation.setFromRotationMatrix(WURLD.pokeball.model.matrix);
+          }
+        }
+
         // Animate the pigs
         var to_destroy = [];
+        var pokeball_pos = null;
+        if(WURLD.pokeball.model && WURLD.pokeball.model.visible){
+          pokeball_pos = WURLD.pokeball.model.position;
+        }
         for(p in WURLD.pigs){
           var pig = WURLD.pigs[p];
           WURLD.animator.updatePig(pig,delta);
@@ -401,6 +445,26 @@ var WURLD = {
           WURLD.physics.moveInDirection(pig.body,pig.rotation.y,WURLD_SETTINGS.pig_speed,delta);
           if(!WURLD.put_object_on_ground(pig)) to_destroy.push(p);
           else if(pig.position.z < -5) to_destroy.push(p);
+
+          // Check if we're within a certain distance of a pokeball
+          // And we're not in a pen
+          if(!pig.pen_locator && pokeball_pos){
+              var dist = pig.position.distanceTo(pokeball_pos);
+              if(dist <= WURLD_SETTINGS.capture_distance){
+                WURLD.sound.pokeball('caught');
+                WURLD.hide_pokeball();
+                to_destroy.push(p);
+                WURLD.pigs_rescued++
+
+                // Particle effect for pig capture
+                WURLD.capture_particles.show(pig);
+                setTimeout(function(){WURLD.capture_particles.hide();},WURLD_SETTINGS.banner_timeout);
+                WURLD.showMessage('CAPTURED_A_PIG',false,true);
+
+                // Don't capture any other pigs
+                pokeball_pos = null;
+              }
+          }
         }
         var i;
         while(i = to_destroy.pop()) WURLD.destroy_pig(i);
@@ -422,7 +486,8 @@ var WURLD = {
           WURLD.water.obj.updateTextureMatrix();
           WURLD.water.obj.render();
         }
-        WURLD.particles.render(delta);
+        WURLD.treasure_particles.render(delta);
+        WURLD.capture_particles.render(delta);
         WURLD.renderer.render(WURLD.scene,WURLD.camera);
 
         if(WURLD.stats) WURLD.stats.end();
@@ -1005,6 +1070,38 @@ var WURLD = {
 
               WURLD.scene.add( WURLD.player_avatar );
 
+              // Create the full sized, freely moving, pokeball
+              var geometry = new THREE.SphereBufferGeometry( WURLD_SETTINGS.ball_size, 8,8);
+              var material = new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                shading: THREE.FlatShading,
+                side: THREE.DoubleSide,
+                specular: 0x333333,
+                shininess:50
+              });
+              material.map = WURLD.texture_loader.load('img/pokeball_texture.png', function(){
+                material.needsUpdate = true;
+              });
+
+              WURLD.pokeball.model = new THREE.Mesh(geometry,material);
+              WURLD.pokeball.model.castShadow = true;
+
+              WURLD.pokeball.model.position.copy(WURLD.player_avatar.position);
+              WURLD.scene.add(WURLD.pokeball.model);
+
+              // Create the small version of the pokeball that the player holds in their hand
+              var mini_geometry = new THREE.SphereBufferGeometry( 0.5);
+              WURLD.pokeball.mini_model = new THREE.Mesh(mini_geometry,material);
+              WURLD.pokeball.mini_model.castShadow = true;
+              WURLD.pokeball.mini_model.position.set(0,-2,0);
+              WURLD.pokeball.mini_model.rotation.y = Math.PI;
+              WURLD.player_avatar.children[2].add(WURLD.pokeball.mini_model); // Child 2 is the player's right arm, see awo-animate.js
+
+              // Hide the big ball, show the mini-version, initially
+              WURLD.pokeball.model.visible = false;
+              WURLD.pokeball.mini_model.visible = true;
+
+              // Continue on with loading
               deferred.resolve('Loaded player');
             }
         );
@@ -1057,6 +1154,60 @@ var WURLD = {
         });
 
         return deferred.promise();
+    },
+
+    hide_pokeball: function(){
+      if(WURLD.pokeball.fire_timer){
+        clearTimeout(WURLD.pokeball.fire_timer);
+        WURLD.pokeball.fire_timer = null;
+      }
+
+      // Show the small ball, hide the big one
+      WURLD.pokeball.model.visible = false;
+      WURLD.pokeball.mini_model.visible = true;
+
+      // Destroy the physical body, so we dont' try to move it around
+      WURLD.physics.destroyBody(WURLD.pokeball.body);
+      WURLD.pokeball.body = null;
+    },
+
+    fire_pokeball: function(){
+
+      if(WURLD.pokeball.fire_timer == null){
+
+        // Hide the small ball, show the big one
+        WURLD.pokeball.model.visible = true;
+        WURLD.pokeball.mini_model.visible = false;
+
+        // Position the big ball just in front of the player
+        var pos = WURLD.player_avatar.position.clone();
+        var rot = WURLD.player_avatar.rotation.y;
+
+        var offs = new THREE.Vector3(-1,-(WURLD_SETTINGS.ball_size + 1),0);
+        offs.applyAxisAngle(new THREE.Vector3(0,0,1),rot);
+        pos.add(offs);
+
+        WURLD.pokeball.model.position.copy(pos);
+
+        // Create a physical body for the big one, making sure we destroy any existing one first
+        WURLD.physics.destroyBody(WURLD.pokeball.body);
+
+        WURLD.pokeball.body = WURLD.physics.createMoveableCircleBody(
+          WURLD.pokeball.model.position.x,
+          -WURLD.pokeball.model.position.y,
+          WURLD_SETTINGS.ball_size
+        );
+
+        // Fire the ball forwards
+        Matter.Body.setVelocity(WURLD.pokeball.body,{x:offs.x * WURLD_SETTINGS.ball_speed,y:-offs.y * WURLD_SETTINGS.ball_speed});
+        WURLD.sound.pokeball('launch');
+
+        // Set a timer so we can only fire the ball every so often
+        WURLD.pokeball.fire_timer = setTimeout(function(){
+          WURLD.sound.pokeball('fail');
+          WURLD.hide_pokeball();
+        },WURLD_SETTINGS.ball_duration);
+      }
     },
 
     try_open_chest: function(){
@@ -1183,8 +1334,8 @@ var WURLD = {
                 WURLD.sound.fanfare();
 
                 // Fire off some particles for a bit
-                WURLD.particles.show(chest);
-                setTimeout(function(){WURLD.particles.hide();},WURLD_SETTINGS.banner_timeout);
+                WURLD.treasure_particles.show(chest);
+                setTimeout(function(){WURLD.treasure_particles.hide();},WURLD_SETTINGS.banner_timeout);
 
                 // RXIE: emit event in browser for client side robot control
                 WURLD.eventEmitter.emitEvent("chest_opened");

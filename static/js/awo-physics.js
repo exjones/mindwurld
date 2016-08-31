@@ -78,6 +78,14 @@ WurldPhysics.prototype.createCircleBody = function(x,y,s){
   return obj;
 }
 
+WurldPhysics.prototype.createMoveableCircleBody = function(x,y,s){
+
+  var obj = Matter.Bodies.circle(x,y,s,{restitution:0,friction:0,frictionAir:0.01,isStatic:false});
+  Matter.World.add(this.engine.world, obj);
+
+  return obj;
+}
+
 WurldPhysics.prototype.createBoxBody = function(x,y,w,h,a){
 
   var obj = Matter.Bodies.rectangle(x,y,w,h,{angle:-a + (Math.PI*0.5),restitution:0,friction:0,isStatic:true});

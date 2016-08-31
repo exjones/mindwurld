@@ -308,8 +308,8 @@ th {
 }
 td{padding:3px;}
 .w-name{text-align:left;}
-.w-pigs, .w-treasure, .w-total{text-align:right;font-weight:normal;}
-td.w-treasure,td.w-pigs{color:lightGray;}
+.w-pigs, .w-rescued, .w-treasure, .w-total{text-align:right;font-weight:normal;}
+td.w-treasure,td.w-pigs,td.w-rescued{color:lightGray;}
 #w-score-restart{
   position: absolute;
   bottom: 0.5em;
