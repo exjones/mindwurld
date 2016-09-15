@@ -1036,6 +1036,10 @@ var WURLD = {
       // Can only jump if underwater, or on ground
       if(WURLD.player_avatar.position.z < WURLD_SETTINGS.drown_depth || WURLD.jump_offset == 0){
         WURLD.jump_speed = WURLD_SETTINGS.jump_speed;
+
+        // RXIE: notify jump_up
+        WURLD.socket.emit('jump_up');
+
       }
     },
 
@@ -1201,6 +1205,9 @@ var WURLD = {
         // Fire the ball forwards
         Matter.Body.setVelocity(WURLD.pokeball.body,{x:offs.x * WURLD_SETTINGS.ball_speed,y:-offs.y * WURLD_SETTINGS.ball_speed});
         WURLD.sound.pokeball('launch');
+
+        // Tell robot Pokeball is fired
+        WURLD.socket.emit('ball_thrown');
 
         // Set a timer so we can only fire the ball every so often
         WURLD.pokeball.fire_timer = setTimeout(function(){

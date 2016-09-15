@@ -22,29 +22,49 @@ var WurldInput = function(){
 
 	this.start_walking = function(speed){
 		WURLD.physics.setSpeed(speed);
-		if(!WURLD.is_walking){
+		if( speed > 0 ) {
+			WURLD.socket.emit('go_forward');
+		}
+		else if (speed < 0 ) {
+			WURLD.socket.emit('go_backward');	
+		}
+
+		if(!WURLD.is_walking) {
 			WURLD.sound.startFootsteps();
-    	WURLD.is_walking = true;
+    		WURLD.is_walking = true;
 		}
 	}
 
 	this.stop_walking = function(){
 		if(WURLD.is_walking){
 			WURLD.physics.setSpeed(0);
+
+			WURLD.socket.emit('go_stop');
+
 			WURLD.sound.stopFootsteps();
-    	WURLD.animator.resetPerson(WURLD.player_avatar);
-    	WURLD.is_walking = false;
+	    	WURLD.animator.resetPerson(WURLD.player_avatar);
+    		WURLD.is_walking = false;
 		}
 	}
 
 	this.start_turning = function(speed){
 		WURLD.physics.setRotation(speed);
+		if( speed > 0 ) {
+			WURLD.socket.emit('turn_right');	
+		}
+		else if (speed < 0) {
+			WURLD.socket.emit('turn_left');		
+		}
+
 	}
 
 	this.stop_turning = function(){
     	WURLD.physics.setRotation(0);
+		WURLD.socket.emit('turn_stop');	
+
 	}
 
+	// experiments with Robot control within browser
 	WURLD.eventEmitter.on("chest_opened", function() {
 		console.log("detected: chest_opened");
 	});
@@ -93,8 +113,9 @@ WurldInput.prototype.start = function(){
         prevent_default: true,
         prevent_repeat: true,
         "this":this,
-        on_keydown: function(){this.start_walking(WURLD.input.WALK_SPEED);},
-        on_keyup: function(){this.stop_walking();}
+        // on_keydown: function(){this.start_walking(WURLD.input.WALK_SPEED);},
+        // on_keyup: function(){this.stop_walking();}
+        on_keyup: function(){this.do_walk();}
     });
 
     this.listener.register_combo({
@@ -102,8 +123,9 @@ WurldInput.prototype.start = function(){
         prevent_default: true,
         prevent_repeat: true,
         "this":this,
-        on_keydown: function(){this.start_walking(-WURLD.input.WALK_SPEED);},
-        on_keyup: function(){this.stop_walking();}
+        // on_keydown: function(){this.start_walking(-WURLD.input.WALK_SPEED);},
+        // on_keyup: function(){this.stop_walking();}
+        on_keyup: function(){this.do_walk();}
     });
 
     this.listener.register_combo({
@@ -111,8 +133,9 @@ WurldInput.prototype.start = function(){
         prevent_default: true,
         prevent_repeat: true,
         "this":this,
-        on_keydown: function(){this.start_turning(-WURLD.input.TURN_SPEED);},
-        on_keyup: function(){this.stop_turning();}
+        // on_keydown: function(){this.start_turning(-WURLD.input.TURN_SPEED);},
+        // on_keyup: function(){this.stop_turning();}
+        on_keyup: function(){this.do_left_turn();}
     });
 
     this.listener.register_combo({
@@ -120,8 +143,9 @@ WurldInput.prototype.start = function(){
         prevent_default: true,
         prevent_repeat: true,
         "this":this,
-        on_keydown: function(){this.start_turning(WURLD.input.TURN_SPEED);},
-        on_keyup: function(){this.stop_turning();}
+        // on_keydown: function(){this.start_turning(WURLD.input.TURN_SPEED);},
+        // on_keyup: function(){this.stop_turning();}
+        on_keyup: function(){this.do_right_turn();}
     });
 
 		// These actions can only be done by remote control
